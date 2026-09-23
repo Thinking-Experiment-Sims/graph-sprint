@@ -3,85 +3,323 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Graph Sprint</title>
+<title>Graph Sprint - The Thinking Experiment</title>
+<meta name="description" content="Timed kinematics fluency drill for translating between position, velocity, and acceleration graphs under uniform acceleration.">
+<link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 
 :root{
-  --bg:#f8fafc; --surface:#ffffff; --surface2:#f1f5f9; --ink:#123140; --body:#334155; --muted:#64748b;
-  --line:#c8dbe3; --grid:#e2e8f0; --axis:#64748b; --accent:#0f7e9b; --accent-soft:#e9f4fb; --title:#0f7e9b; --eyebrow:#0b5f77;
-  --gold:#d67b19; --gold-ink:#8a4704; --warm:#fff8eb; --btn:#0f7e9b; --btn-ink:#ffffff;
-  --cx:#1f5fa8; --cv:#0f7e9b; --ca:#d67b19; --good:#15803d; --good-soft:#e5f5ea; --bad:#b91c1c; --bad-soft:#fdecec; --segline:#94a3b8;
+  --teal-900: #0b5f77;
+  --teal-500: #0f7e9b;
+  --teal-400: #13a1c4;
+  --teal-100: #e9f4fb;
+  --amber-500: #d67b19;
+  --amber-300: #e8a14a;
+  --amber-100: #fff4dd;
+  --text-100: #123140;
+  --text-300: #4b6570;
+  --text-500: #64748b;
+  --border: #c8dbe3;
+  --primary: var(--teal-500);
+  --primary-deep: var(--teal-900);
+  --accent: var(--amber-500);
+
+  --bg: #ffffff;
+  --app-bg:
+    radial-gradient(1200px 700px at 8% 2%, rgba(19, 143, 176, 0.14), transparent 62%),
+    radial-gradient(900px 600px at 92% 98%, rgba(220, 132, 32, 0.14), transparent 66%),
+    linear-gradient(165deg, #e9f4fb, #fff4dd);
+
+  --surface: #ffffff;
+  --surface2: #f8fafc;
+  --ink: #123140;
+  --body: #334155;
+  --muted: #4b6570;
+  --line: #c8dbe3;
+  --grid: #eef5f8;
+  --axis: #526b77;
+
+  --title: var(--teal-500);
+  --eyebrow: var(--teal-900);
+  --accent-soft: var(--teal-100);
+  --gold: var(--amber-500);
+  --gold-ink: #8a4704;
+  --warm: var(--amber-100);
+  --btn: var(--teal-500);
+  --btn-ink: #ffffff;
+
+  /* Scientific curve representations */
+  --cx: #1f5fa8; /* Position (x-t): Royal Blue */
+  --cv: #0f7e9b; /* Velocity (v-t): Teal */
+  --ca: #d67b19; /* Acceleration (a-t): Amber */
+
+  --good: #15803d;
+  --good-soft: #e5f5ea;
+  --bad: #b91c1c;
+  --bad-soft: #fdecec;
+  --segline: #8ea7b3;
 }
+
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#0f172a; --surface:#1e293b; --surface2:#334155; --ink:#f8fafc; --body:#cbd5e1; --muted:#94a3b8;
-    --line:#334155; --grid:#1e293b; --axis:#64748b; --accent:#38bdf8; --accent-soft:#0c4a6e; --title:#38bdf8; --eyebrow:#7dd3fc;
-    --gold:#f59e0b; --gold-ink:#fbbf24; --warm:#451a03; --btn:#0f7e9b; --btn-ink:#ffffff;
-    --cx:#60a5fa; --cv:#2dd4bf; --ca:#fb923c; --good:#4ade80; --good-soft:#15291c; --bad:#f87171; --bad-soft:#321a1d; --segline:#64748b;
+    --bg:#0c171e;
+    --app-bg:#0c171e;
+    --surface:#15242c;
+    --surface2:#1c313c;
+    --ink:#f0f8fa;
+    --body:#c0d5df;
+    --muted:#85a1af;
+    --line:#264350;
+    --grid:#1a2f3a;
+    --axis:#6a8d9e;
+    --accent:#22b0d3;
+    --accent-soft:#113847;
+    --title:#22b0d3;
+    --eyebrow:#4ec7e6;
+    --gold:#e8962f;
+    --gold-ink:#fed391;
+    --warm:#36230f;
+    --btn:#0f7e9b;
+    --btn-ink:#ffffff;
+    --cx:#5fa3ef;
+    --cv:#25c4b1;
+    --ca:#f59e0b;
+    --good:#34d399;
+    --good-soft:#102e23;
+    --bad:#f87171;
+    --bad-soft:#331a1e;
+    --segline:#4b6a7a;
   }
 }
+
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#0f172a; --surface:#1e293b; --surface2:#334155; --ink:#f8fafc; --body:#cbd5e1; --muted:#94a3b8;
-  --line:#334155; --grid:#1e293b; --axis:#64748b; --accent:#38bdf8; --accent-soft:#0c4a6e; --title:#38bdf8; --eyebrow:#7dd3fc;
-  --gold:#f59e0b; --gold-ink:#fbbf24; --warm:#451a03; --btn:#0f7e9b; --btn-ink:#ffffff;
-  --cx:#60a5fa; --cv:#2dd4bf; --ca:#fb923c; --good:#4ade80; --good-soft:#15291c; --bad:#f87171; --bad-soft:#321a1d; --segline:#64748b;
+  --bg:#0c171e;
+  --app-bg:#0c171e;
+  --surface:#15242c;
+  --surface2:#1c313c;
+  --ink:#f0f8fa;
+  --body:#c0d5df;
+  --muted:#85a1af;
+  --line:#264350;
+  --grid:#1a2f3a;
+  --axis:#6a8d9e;
+  --accent:#22b0d3;
+  --accent-soft:#113847;
+  --title:#22b0d3;
+  --eyebrow:#4ec7e6;
+  --gold:#e8962f;
+  --gold-ink:#fed391;
+  --warm:#36230f;
+  --btn:#0f7e9b;
+  --btn-ink:#ffffff;
+  --cx:#5fa3ef;
+  --cv:#25c4b1;
+  --ca:#f59e0b;
+  --good:#34d399;
+  --good-soft:#102e23;
+  --bad:#f87171;
+  --bad-soft:#331a1e;
+  --segline:#4b6a7a;
 }
+
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--body);font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+
+body{
+  background:var(--app-bg);
+  color:var(--body);
+  font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:14px;
+  min-height:100vh;
+  margin:0;
+}
+
+.bg-grid{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  background-image:linear-gradient(rgba(15, 126, 155, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(214, 123, 25, 0.06) 1px, transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(circle at center, black 45%, transparent 95%);
+}
+
 .wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:16px 40px;display:flex;flex-direction:column;gap:12px}
-.hero{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 20px}
-.eyebrow{font-size:12px;color:var(--eyebrow)}
-h1{margin:2px 0 6px;font-size:clamp(24px,4vw,32px);line-height:1.15;color:var(--title)}
-.summary{margin:0;border-left:6px solid var(--gold);padding-left:12px;font-size:15px;line-height:1.5}
-.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+
+.hero{
+  background:linear-gradient(160deg, #ffffff, #f7fbfd);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px 24px;
+  box-shadow:0 4px 16px rgba(12, 54, 68, 0.06);
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:10px;
+  background:var(--primary);
+  border-radius:16px 0 0 16px;
+}
+.hero-content{flex:1 1 540px}
+.kicker{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.09em;
+  text-transform:uppercase;
+  color:var(--primary);
+  margin:0 0 4px 0;
+}
+h1{
+  margin:2px 0 6px;
+  font-size:clamp(24px,3.8vw,32px);
+  line-height:1.15;
+  color:var(--ink);
+  font-weight:800;
+}
+.summary{
+  margin:0;
+  border-left:4px solid var(--accent);
+  padding-left:12px;
+  font-size:14px;
+  line-height:1.5;
+  color:var(--text-300);
+}
+.hero-actions{display:flex;gap:10px;align-items:center}
+
+/* Guidance Panel */
+.guide-panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px 20px;
+  box-shadow:0 4px 14px rgba(12, 54, 68, 0.05);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  animation:fadeIn 0.25s ease-out;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.guide-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:10px;
+}
+.guide-kicker{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--accent);
+}
+.guide-header h2{
+  margin:2px 0 0;
+  font-size:17px;
+  color:var(--ink);
+  font-weight:700;
+}
+.guide-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+@media (max-width:920px){.guide-grid{grid-template-columns:1fr}}
+.guide-card{
+  background:var(--surface2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+}
+.guide-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.guide-icon{font-size:16px}
+.guide-card h3{margin:0;font-size:13.5px;font-weight:700;color:var(--primary)}
+.guide-text{margin:0 0 8px;font-size:12px;color:var(--muted);font-style:italic}
+.guide-list{
+  margin:0;
+  padding-left:16px;
+  font-size:12px;
+  color:var(--ink);
+  line-height:1.55;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.guide-list kbd{
+  background:#ffffff;
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:1px 5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11px;
+  font-weight:700;
+  color:var(--primary-deep);
+}
+
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:0 2px 8px rgba(12, 54, 68, 0.04)}
 .grp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .grp>span{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.seg button{font:inherit;font-size:13px;border:0;background:var(--surface);color:var(--body);padding:6px 11px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button{font:inherit;font-size:13px;border:0;background:var(--surface);color:var(--body);padding:6px 12px;cursor:pointer;border-right:1px solid var(--line);transition:all .15s ease}
 .seg button:last-child{border-right:0}
-.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
-.chip{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 10px;cursor:pointer}
-.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
-.btn{font:inherit;font-weight:700;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--btn);background:var(--btn);color:var(--btn-ink)}
-.btn.ghost{background:var(--surface);color:var(--accent);border-color:var(--line)}
-.mini{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--surface2);color:var(--body);border-radius:8px;padding:4px 10px;cursor:pointer}
-button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.seg button:hover:not([aria-pressed="true"]){background:var(--surface2)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--primary-deep);font-weight:700}
+.chip{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer;transition:all .15s ease}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip[aria-pressed="true"]{border-color:var(--primary);background:var(--accent-soft);color:var(--primary-deep);font-weight:700}
+.btn{font:inherit;font-weight:700;font-size:13px;border-radius:10px;padding:8px 16px;cursor:pointer;border:1px solid var(--btn);background:var(--btn);color:var(--btn-ink);transition:all .15s ease}
+.btn:hover{background:var(--primary-deep);border-color:var(--primary-deep)}
+.btn.ghost{background:var(--surface);color:var(--primary);border-color:var(--line)}
+.btn.ghost:hover{background:var(--accent-soft);border-color:var(--primary)}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:#ffffff}
+.btn-accent:hover{background:#bf6a13;border-color:#bf6a13}
+.mini{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--body);border-radius:8px;padding:4px 10px;cursor:pointer;transition:all .15s ease}
+.mini:hover{background:var(--surface);border-color:var(--primary);color:var(--primary)}
+button:focus-visible{outline:2.5px solid var(--gold);outline-offset:2px}
 .hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.hud div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.hud div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;box-shadow:0 2px 8px rgba(12, 54, 68, 0.04)}
 .hud small{display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .hud b{font-size:24px;color:var(--ink);font-variant-numeric:tabular-nums}
 .hud .run b{color:var(--accent)}
 .arena{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:12px;align-items:start;position:relative}
 @media (max-width:860px){.arena{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 4px 14px rgba(12, 54, 68, 0.05)}
 .dir{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap}
 .dir .big{font-size:22px;font-weight:800;color:var(--ink);letter-spacing:.01em}
 .dir .big i{font-style:normal;color:var(--muted);font-weight:500;padding:0 4px}
 .ic{display:inline-flex;gap:6px;flex-wrap:wrap}
-.ic span{font-size:13px;font-weight:700;background:var(--warm);border:1px solid var(--gold);color:var(--gold-ink);border-radius:999px;padding:2px 10px}
+.ic span{font-size:12px;font-weight:700;background:var(--warm);border:1px solid var(--gold);color:var(--gold-ink);border-radius:999px;padding:2px 10px}
 canvas{display:block;width:100%}
 .src{height:230px}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.opt{position:relative;border:2px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;padding:6px;font:inherit;text-align:left}
-.opt:hover{border-color:var(--accent)}
+.opt{position:relative;border:2px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;padding:6px;font:inherit;text-align:left;transition:all .15s ease}
+.opt:hover{border-color:var(--primary)}
 .opt canvas{height:120px}
-.opt .k{position:absolute;top:6px;left:8px;font-size:11px;font-weight:800;color:var(--muted)}
+.opt .k{position:absolute;top:6px;left:8px;font-size:11px;font-weight:800;color:var(--muted);background:var(--surface2);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
 .opt.good{border-color:var(--good);background:var(--good-soft)}
 .opt.bad{border-color:var(--bad);background:var(--bad-soft)}
 .tgt{height:170px}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-.tile{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--surface2);cursor:pointer;padding:8px 4px 4px;display:flex;justify-content:center}
-.tile:hover{border-color:var(--accent)}
+.tile{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--surface2);cursor:pointer;padding:8px 4px 4px;display:flex;justify-content:center;transition:all .15s ease}
+.tile:hover{border-color:var(--primary);background:var(--surface)}
 .tile svg{width:100%;max-width:92px;height:44px}
-.tile .k{position:absolute;top:4px;left:7px;font-size:11px;font-weight:800;color:var(--muted)}
+.tile .k{position:absolute;top:4px;left:7px;font-size:11px;font-weight:800;color:var(--muted);background:var(--surface);padding:0 4px;border-radius:3px;border:1px solid var(--line)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .flash-good{box-shadow:0 0 0 3px var(--good)}
 .flash-bad{box-shadow:0 0 0 3px var(--bad)}
-.over{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);display:flex;align-items:flex-start;justify-content:center;padding-top:30px;border-radius:14px;z-index:5}
+.over{position:absolute;inset:0;background:color-mix(in srgb,var(--surface) 92%,transparent);display:flex;align-items:flex-start;justify-content:center;padding-top:30px;border-radius:14px;z-index:5;backdrop-filter:blur(4px)}
 .over .card{max-width:440px;width:100%;text-align:center;padding:22px}
 .over h2{margin:0 0 4px;color:var(--title)}
 .res{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0}
@@ -89,7 +327,7 @@ canvas{display:block;width:100%}
 .res b{display:block;font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
 .res small{color:var(--muted);font-size:12px}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-size:13px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);font-size:13px}
 th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 td.d{font-weight:800;color:var(--ink);white-space:nowrap}
 .meter{height:8px;border-radius:5px;background:var(--grid);overflow:hidden;min-width:60px}
@@ -99,20 +337,99 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
 @media (max-width:520px){.hud b{font-size:19px}.src{height:200px}.opt canvas{height:100px}}
 </style>
 </head>
-<body style="margin:0">
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
 
 <div class="wrap">
   <header class="hero">
-    <div class="eyebrow">Unit 2 &bull; Uniform Acceleration</div>
-    <h1>Graph Sprint</h1>
-    <p class="summary">One graph in, its partner out. Fast reps, no hints. Beat your time, then beat your weakest translation.</p>
+    <div class="hero-content">
+      <p class="kicker">The Thinking Experiment &bull; Kinematics</p>
+      <h1>✨ Graph Sprint</h1>
+      <p class="summary">One graph in, its partner out. Fast reps translating between x&ndash;t, v&ndash;t, and a&ndash;t. Hit 80% in Pick, then move to Build.</p>
+    </div>
+    <div class="hero-actions">
+      <button type="button" class="btn ghost" id="btnToggleGuide">📖 Guidance &amp; Reference</button>
+    </div>
   </header>
+
+  <!-- Interactive Guidance & Rules Panel -->
+  <section class="guide-panel" id="guidePanel" aria-label="Interactive Guidance and Physics Principles">
+    <div class="guide-header">
+      <div class="guide-title-wrap">
+        <span class="guide-kicker">Pedagogical Guide &amp; Physics Reference</span>
+        <h2>Translating Kinematic Graphs ($x&ndash;t \leftrightarrow v&ndash;t \leftrightarrow a&ndash;t$)</h2>
+      </div>
+      <button type="button" class="mini" id="btnCloseGuide" aria-label="Close guide">✕ Close Guide</button>
+    </div>
+
+    <div class="guide-grid">
+      <!-- Card 1: Modes & Controls -->
+      <div class="guide-card">
+        <div class="guide-card-top">
+          <span class="guide-icon">⚡</span>
+          <h3>Drill Modes &amp; Controls</h3>
+        </div>
+        <p class="guide-text">Train rapid conceptual recognition and piecewise graph construction.</p>
+        <ul class="guide-list">
+          <li><strong>Pick Mode:</strong> Study the source curve on the left. Click or press keys <kbd>1</kbd>&ndash;<kbd>4</kbd> to identify the correct partner graph. Aim for 80%+ accuracy!</li>
+          <li><strong>Build Mode:</strong> Construct the target curve segment-by-segment! Click or press keys <kbd>1</kbd>&ndash;<kbd>9</kbd> to assign shapes to each time interval. Press <kbd>⌫ Backspace</kbd> or <strong>Undo</strong> to fix errors.</li>
+          <li><strong>Sprint (90s):</strong> Click <em>Start 90 s sprint</em> to test your fluency under timed conditions.</li>
+          <li><strong>Weakest Translation:</strong> Click <em>Drill my 2 weakest</em> to isolate the graph transitions where you need the most practice.</li>
+        </ul>
+      </div>
+
+      <!-- Card 2: Slope Relationships -->
+      <div class="guide-card">
+        <div class="guide-card-top">
+          <span class="guide-icon">📐</span>
+          <h3>Slope Rules ($x \rightarrow v \rightarrow a$)</h3>
+        </div>
+        <p class="guide-text">Remember: <strong>Slope takes you down</strong> from Position to Velocity to Acceleration.</p>
+        <ul class="guide-list">
+          <li><strong>$x&ndash;t \rightarrow v&ndash;t$ (Slope of Position is Velocity):</strong>
+            <br>&bull; Tangent slope is positive $\implies v > 0$ (above zero axis).
+            <br>&bull; Tangent slope is negative $\implies v < 0$ (below zero axis).
+            <br>&bull; Horizontal tangent / peak / valley $\implies v = 0$ (instantaneous stop / turnaround).
+          </li>
+          <li><strong>$v&ndash;t \rightarrow a&ndash;t$ (Slope of Velocity is Acceleration):</strong>
+            <br>&bull; Rising straight line ($/$)$\implies$ constant positive $+a$.
+            <br>&bull; Falling straight line ($\backslash$)$\implies$ constant negative $-a$.
+            <br>&bull; Horizontal line ($-$) $\implies a = 0$ (constant velocity).
+          </li>
+        </ul>
+      </div>
+
+      <!-- Card 3: Area & Concavity Shortcuts -->
+      <div class="guide-card">
+        <div class="guide-card-top">
+          <span class="guide-icon">💡</span>
+          <h3>Area &amp; Concavity Shortcuts</h3>
+        </div>
+        <p class="guide-text">Remember: <strong>Area takes you up</strong> from Acceleration to Velocity to Position.</p>
+        <ul class="guide-list">
+          <li><strong>Area Under Curves:</strong>
+            <br>&bull; Area under $a&ndash;t$ between $t_1$ and $t_2 = \Delta v$ (change in velocity).
+            <br>&bull; Area under $v&ndash;t$ between $t_1$ and $t_2 = \Delta x$ (displacement).
+          </li>
+          <li><strong>Concavity on $x&ndash;t$:</strong>
+            <br>&bull; <em>Concave up ($\cup$):</em> Positive acceleration ($a > 0$).
+            <br>&bull; <em>Concave down ($\cap$):</em> Negative acceleration ($a < 0$).
+            <br>&bull; <em>Straight (no curve):</em> Zero acceleration ($a = 0$).
+          </li>
+          <li><strong>Speeding Up vs Slowing Down:</strong>
+            <br>&bull; Same signs ($v>0, a>0$ or $v<0, a<0$)$\implies$ speeding up (moving away from $v=0$).
+            <br>&bull; Opposite signs ($v>0, a<0$ or $v<0, a>0$)$\implies$ slowing down (approaching $v=0$).
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
   <div class="bar">
     <div class="grp"><span>Mode</span><div class="seg" id="mode"><button type="button" data-v="match" aria-pressed="true">Pick</button><button type="button" data-v="build" aria-pressed="false">Build</button></div></div>
     <div class="grp"><span>Intervals</span><div class="seg" id="level"><button type="button" data-v="1" aria-pressed="false">1</button><button type="button" data-v="2" aria-pressed="false">2</button><button type="button" data-v="3" aria-pressed="false">3</button><button type="button" data-v="mix" aria-pressed="true">Mix</button></div></div>
     <div class="grp"><span>Translations</span><div class="row" id="dirs"></div></div>
-    <div class="grp" style="margin-left:auto"><button class="btn" id="sprint" type="button">Start 90 s sprint</button></div>
+    <div class="grp" style="margin-left:auto"><button class="btn btn-accent" id="sprint" type="button">Start 90 s sprint</button></div>
   </div>
 
   <div class="hud">
@@ -140,7 +457,7 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
         <h2>Time</h2>
         <div id="overSub" style="color:var(--muted)"></div>
         <div class="res" id="res"></div>
-        <div class="row" style="justify-content:center"><button class="btn" id="again" type="button">Sprint again</button><button class="btn ghost" id="toPractice" type="button">Back to practice</button></div>
+        <div class="row" style="justify-content:center"><button class="btn btn-accent" id="again" type="button">Sprint again</button><button class="btn ghost" id="toPractice" type="button">Back to practice</button></div>
       </div>
     </div>
   </div>
@@ -363,6 +680,22 @@ function renderStats(){
 $('weakest').onclick=()=>{const ranked=rank().sort((a,b)=>a.score-b.score);const picks=ranked.filter(x=>x.score<0).concat(ranked.filter(x=>x.score>=0)).slice(0,2).map(x=>x.d);
   const tried=rank().filter(x=>x.score>=0).sort((a,b)=>a.score-b.score).map(x=>x.d);const sel=tried.length>=2?tried.slice(0,2):picks;S.dirs=new Set(sel);renderDirs();next()};
 $('resetStats').onclick=()=>{stats[S.mode]={};best[S.mode]=0;save();renderStats()};
+
+/* guidance toggle */
+const gPanel=$('guidePanel'),btnToggle=$('btnToggleGuide'),btnClose=$('btnCloseGuide');
+if(btnToggle&&gPanel){
+  btnToggle.onclick=()=>{
+    const isHidden=gPanel.hasAttribute('hidden');
+    if(isHidden){gPanel.removeAttribute('hidden');btnToggle.textContent='📖 Hide Guidance';btnToggle.classList.remove('ghost')}
+    else{gPanel.setAttribute('hidden','');btnToggle.textContent='📖 Guidance & Reference';btnToggle.classList.add('ghost')}
+  };
+}
+if(btnClose&&gPanel){
+  btnClose.onclick=()=>{
+    gPanel.setAttribute('hidden','');
+    if(btnToggle){btnToggle.textContent='📖 Guidance & Reference';btnToggle.classList.add('ghost')}
+  };
+}
 
 /* boot */
 readTheme();renderDirs();renderStats();hud();next();
