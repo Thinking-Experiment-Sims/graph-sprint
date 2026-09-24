@@ -297,11 +297,11 @@ button:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
 .ic{display:inline-flex;gap:6px;flex-wrap:wrap}
 .ic span{font-size:12px;font-weight:700;background:var(--warm);border:1px solid var(--gold);color:var(--gold-ink);border-radius:999px;padding:2px 10px}
 canvas{display:block;width:100%}
-.src{height:250px}
+.src{height:250px;cursor:crosshair}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .opt{position:relative;border:2px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;padding:6px;font:inherit;text-align:left;transition:all .15s ease}
 .opt:hover{border-color:var(--primary)}
-.opt canvas{height:148px}
+.opt canvas{height:148px;cursor:crosshair}
 .opt .k{position:absolute;top:6px;right:8px;font-size:11px;font-weight:800;color:var(--muted);background:var(--surface2);padding:1px 6px;border-radius:4px;border:1px solid var(--line);z-index:2}
 .opt.good{border-color:var(--good);background:var(--good-soft)}
 .opt.bad{border-color:var(--bad);background:var(--bad-soft)}
@@ -502,6 +502,10 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
             <br>&bull; Same signs (v &gt; 0, a &gt; 0 OR v &lt; 0, a &lt; 0) &rArr; speeding up (moving away from v = 0).
             <br>&bull; Opposite signs (v &gt; 0, a &lt; 0 OR v &lt; 0, a &gt; 0) &rArr; slowing down (approaching v = 0).
           </li>
+          <li><strong>Curvature &amp; Tangent Tools:</strong>
+            <br>&bull; <em>Interactive Tangent Wand:</em> Hover or touch/drag across any curve to probe its slope. If the wand stays at a fixed angle, the slope is constant (&rArr; straight line, a = 0). If the wand continuously tilts/rotates, the slope is changing (&rArr; accelerated parabola).
+            <br>&bull; <em>Straight Reference (📏):</em> Click <em>Straight Reference</em> above the graph to overlay dashed straight chords across segment boundaries, instantly highlighting any parabolic sagitta/bulge.
+          </li>
         </ul>
       </div>
     </div>
@@ -570,7 +574,11 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
   <!-- Arena -->
   <div class="arena" id="arena">
     <div class="card" id="srcCard">
-      <div class="dir"><div class="big" id="dirLabel"></div><div class="ic" id="ic"></div></div>
+      <div class="dir">
+        <div class="big" id="dirLabel"></div>
+        <div class="ic" id="ic"></div>
+        <button type="button" class="chip" id="btnToggleRef" style="margin-left:auto;font-size:11.5px;padding:3px 10px;" aria-pressed="false" title="Overlay straight-line reference chords across segment endpoints to reveal curvature">📏 Straight Reference</button>
+      </div>
       <canvas class="src" id="cSrc"></canvas>
     </div>
     <div class="card" id="ansCard">
@@ -639,7 +647,7 @@ function segOf(m,t){for(let i=0;i<m.segs.length;i++)if(t<m.segs[i].t1)return i;r
 function stateAt(m,t){let x=m.x0,v=m.v0;for(const s of m.segs){if(t<=s.t0)break;const d=Math.min(t,s.t1)-s.t0;x+=v*d+.5*s.a*d*d;v+=s.a*d}return{x,v,a:m.segs[segOf(m,t)].a}}
 const sam=(m,q)=>Array.from({length:NS},(_,k)=>stateAt(m,k*T/(NS-1))[q]);
 
-/* Infinite algorithmic problem generation */
+/* Infinite algorithmic problem generation with guaranteed visible curvature */
 function gen(level,segsFixed){
   const lv=level==='mix'?pick([1,2,2,3,3]):+level;
   const splits=lv===1?[[8]]:lv===2?[[3,5],[4,4],[5,3],[2,6],[6,2]]:[[2,3,3],[3,2,3],[3,3,2],[2,2,4],[2,4,2],[4,2,2]];
@@ -647,11 +655,32 @@ function gen(level,segsFixed){
     let segs;
     if(segsFixed)segs=segsFixed.map(s=>({t0:s.t0,t1:s.t1,a:0}));
     else{const sp=pick(splits);let t0=0;segs=sp.map(d=>{const s={t0,t1:t0+d,a:0};t0+=d;return s})}
-    let prev=null;for(const s of segs){let a;do{a=pick(segs.length===1?[-1,-.5,.5,1]:[-2,-1,-1,-.5,0,.5,1,1,2])}while(a===prev);s.a=a;prev=a}
+    let prev=null;
+    for(const s of segs){
+      const dt=s.t1-s.t0;
+      const aPool=dt<=2?[-2,-1.5,-1,0,1,1.5,2]:[-2,-1.5,-1,-0.5,0,0.5,1,1.5,2];
+      let a;do{a=pick(aPool)}while(a===prev);s.a=a;prev=a;
+    }
     const m={x0:pick([-6,-4,-2,0,2,4,6]),v0:pick([-4,-3,-2,-1,0,1,2,3,4]),segs};
     let ok=true,cross=false,pv=m.v0;
-    for(let t=0;t<=T;t+=.25){const v=stateAt(m,t).v;if(Math.abs(v)>6){ok=false;break}if(sgn(v)*sgn(pv)<0)cross=true;pv=v}
+    for(let t=0;t<=T;t+=.25){
+      const v=stateAt(m,t).v;
+      if(Math.abs(v)>6){ok=false;break}
+      if(sgn(v)*sgn(pv)<0)cross=true;
+      pv=v;
+    }
     if(!ok||segs.every(s=>s.a===0))continue;
+
+    // Ensure every curved segment has at least 0.55m of parabolic deflection (sagitta) so it is visibly curved
+    for(const s of segs){
+      if(s.a!==0){
+        const dt=s.t1-s.t0;
+        const sagitta=0.125*Math.abs(s.a)*dt*dt;
+        if(sagitta<0.55){ok=false;break}
+      }
+    }
+    if(!ok)continue;
+
     if(!cross&&Math.random()<.5)continue;
     return m;
   }
@@ -726,6 +755,28 @@ function plot(cv,o){
   g.save();g.beginPath();g.rect(L,Tp-2,pw,ph+4);g.clip();g.strokeStyle=o.color;g.lineWidth=o.labels?2.7:2.4;g.lineCap='round';g.lineJoin='round';g.beginPath();
   o.f.forEach((v,k)=>{const x=X(k*T/(NS-1)),y=Y(v);if(k===0||(o.step&&Math.abs(v-o.f[k-1])>1e-9))g.moveTo(x,y);else g.lineTo(x,y)});g.stroke();g.restore();
 
+  // Straight Reference Chords (Secant lines connecting segment boundaries)
+  if(o.showRef && o.f){
+    g.save();
+    g.setLineDash([5, 4]);
+    g.strokeStyle = '#64748b'; // Subtle slate reference chord
+    g.lineWidth = 1.8;
+    const cuts = [0, ...(o.bounds || []), T];
+    for(let i = 0; i < cuts.length - 1; i++){
+      const tA = cuts[i], tB = cuts[i+1];
+      const kA = Math.round(tA / T * (NS - 1));
+      const kB = Math.round(tB / T * (NS - 1));
+      const vA = o.f[kA], vB = o.f[kB];
+      if(vA != null && vB != null){
+        g.beginPath();
+        g.moveTo(X(tA), Y(vA));
+        g.lineTo(X(tB), Y(vB));
+        g.stroke();
+      }
+    }
+    g.restore();
+  }
+
   // Draw Apex Dot on x-t parabolas
   if(o.apexes && o.apexes.length && o.q === 'x'){
     o.apexes.forEach(pt=>{
@@ -741,6 +792,48 @@ function plot(cv,o){
       }
     });
   }
+
+  // Interactive Tangent Wand
+  if(o.hoverT != null && o.hoverT >= 0 && o.hoverT <= T && o.f){
+    const ht = o.hoverT;
+    const k = Math.min(NS - 1, Math.max(0, Math.round(ht / T * (NS - 1))));
+    const val = o.f[k];
+    const px = Math.round(X(ht)) + 0.5;
+    const py = Math.round(Y(val)) + 0.5;
+
+    // Approximate tangent slope from adjacent samples
+    const k0 = Math.max(0, k - 2), k1 = Math.min(NS - 1, k + 2);
+    const dt = (k1 - k0) * T / (NS - 1);
+    const dv = o.f[k1] - o.f[k0];
+    const slope = dt > 1e-6 ? (dv / dt) : 0;
+
+    const dy_dt = -ph / (2 * M) * slope;
+    const dx_dt = pw / T;
+    const angle = Math.atan2(dy_dt, dx_dt);
+
+    const wandLen = 26;
+    const xA = px - wandLen * Math.cos(angle);
+    const yA = py - wandLen * Math.sin(angle);
+    const xB = px + wandLen * Math.cos(angle);
+    const yB = py + wandLen * Math.sin(angle);
+
+    g.save();
+    g.strokeStyle = 'rgba(214, 123, 25, 0.35)';
+    g.lineWidth = 5.5;
+    g.lineCap = 'round';
+    g.beginPath(); g.moveTo(xA, yA); g.lineTo(xB, yB); g.stroke();
+
+    g.strokeStyle = '#d67b19';
+    g.lineWidth = 2.4;
+    g.beginPath(); g.moveTo(xA, yA); g.lineTo(xB, yB); g.stroke();
+
+    g.fillStyle = '#ffffff';
+    g.strokeStyle = '#d67b19';
+    g.lineWidth = 2;
+    g.beginPath(); g.arc(px, py, 4, 0, 2 * Math.PI);
+    g.fill(); g.stroke();
+    g.restore();
+  }
 }
 function tileSVG(q,id){const f=TF[id];let d='';for(let k=0;k<=20;k++){const u=k/20;d+=(k?'L':'M')+(6+u*80).toFixed(1)+' '+(22-f(u)*17).toFixed(1)}
   const zero=q==='x'?'':`<line x1="3" y1="22" x2="89" y2="22" stroke="var(--axis)" stroke-width="1" stroke-dasharray="3 3"/>`;
@@ -748,7 +841,7 @@ function tileSVG(q,id){const f=TF[id];let d='';for(let k=0;k<=20;k++){const u=k/
 
 /* state */
 const DIRS=['x>v','x>a','v>x','v>a','a>v','a>x'];
-const S={mode:'match',level:'mix',dirs:new Set(DIRS),item:null,t0:0,busy:false,reviewing:false,streak:0,correct:0,total:0,sprint:null,last:null};
+const S={mode:'match',level:'mix',dirs:new Set(DIRS),item:null,t0:0,busy:false,reviewing:false,streak:0,correct:0,total:0,sprint:null,last:null,showRef:false,srcHoverT:null,optHoverT:[null,null,null,null]};
 let stats={match:{},build:{}},best={match:0,build:0};
 try{const s=JSON.parse(localStorage.getItem('gs-stats')||'null');if(s&&s.match)stats=s;const b=JSON.parse(localStorage.getItem('gs-best')||'null');if(b)best=Object.assign(best,b)}catch(e){}
 const save=()=>{try{localStorage.setItem('gs-stats',JSON.stringify(stats));localStorage.setItem('gs-best',JSON.stringify(best))}catch(e){}};
@@ -842,6 +935,8 @@ function showReviewBanner(tipText){
 
 function next(){
   hideReviewBanner();
+  S.srcHoverT = null;
+  S.optHoverT = [null, null, null, null];
   if(!S.dirs.size)S.dirs.add('x>v');
   const dir=pick([...S.dirs]),[src,tgt]=dir.split('>');const m=gen(S.level);
   S.item={dir,src,tgt,m,bounds:m.segs.slice(1).map(s=>s.t0)};
@@ -850,24 +945,104 @@ function next(){
   S.busy=false;render();S.t0=performance.now();
 }
 
-function render(){
+function getTFromCanvas(cv, clientX, hasLabels=true){
+  if(!cv) return null;
+  const r = cv.getBoundingClientRect();
+  const L = hasLabels ? 38 : 10;
+  const R = 10;
+  const pw = r.width - L - R;
+  if(pw <= 0) return null;
+  const mx = clientX - r.left;
+  if(mx < L || mx > r.width - R) return null;
+  const t = ((mx - L) / pw) * T;
+  return Math.max(0, Math.min(T, t));
+}
+
+function renderSrc(){
   const it=S.item;if(!it)return;
-  $('dirLabel').innerHTML=`${LBL[it.src]}<i>&rarr;</i>${LBL[it.tgt]}`;
-  $('ic').innerHTML=chips(it.m,it.src,it.tgt).map(c=>`<span>${c}</span>`).join('');
   const srcF = sam(it.m, it.src);
-  plot($('cSrc'),{f:srcF,step:it.src==='a',bounds:it.bounds,labels:true,title:`${LBL[it.src]} (${UNIT[it.src]})`,color:COL(it.src),q:it.src,apexes:findExtrema(srcF,it.src)});
-  $('matchBox').hidden=S.mode!=='match';$('buildBox').hidden=S.mode!=='build';
-  if(S.mode==='match'){
-    const box=$('opts');box.innerHTML='';
+  plot($('cSrc'),{
+    f:srcF,
+    step:it.src==='a',
+    bounds:it.bounds,
+    labels:true,
+    title:`${LBL[it.src]} (${UNIT[it.src]})`,
+    color:COL(it.src),
+    q:it.src,
+    apexes:findExtrema(srcF,it.src),
+    showRef:S.showRef,
+    hoverT:S.srcHoverT
+  });
+}
+
+function attachOptHover(btn, idx){
+  const cv = btn.querySelector('canvas');
+  if(!cv) return;
+  btn.addEventListener('mousemove', e=>{
+    S.optHoverT[idx] = getTFromCanvas(cv, e.clientX, true);
+    renderOpts(true);
+  });
+  btn.addEventListener('mouseleave', ()=>{
+    if(S.optHoverT[idx] != null){
+      S.optHoverT[idx] = null;
+      renderOpts(true);
+    }
+  });
+  btn.addEventListener('touchmove', e=>{
+    if(e.touches.length > 0){
+      S.optHoverT[idx] = getTFromCanvas(cv, e.touches[0].clientX, true);
+      renderOpts(true);
+    }
+  }, {passive: true});
+  btn.addEventListener('touchend', ()=>{
+    if(S.optHoverT[idx] != null){
+      S.optHoverT[idx] = null;
+      renderOpts(true);
+    }
+  });
+}
+
+function renderOpts(onlyCanvas=false){
+  const it=S.item;if(!it||S.mode!=='match')return;
+  const box=$('opts');
+  if(!onlyCanvas){
+    box.innerHTML='';
     it.opts.forEach((o,i)=>{
       const b=document.createElement('button');
       b.type='button';b.className='opt';
       b.setAttribute('aria-label',`Option ${i+1}`);
       b.innerHTML=`<span class="k">${i+1}</span><canvas></canvas>`;
       b.onclick=()=>answerMatch(i);
+      attachOptHover(b, i);
       box.appendChild(b);
     });
-    [...box.children].forEach((b,i)=>plot(b.querySelector('canvas'),{f:it.opts[i].f,step:it.opts[i].step,bounds:it.bounds,labels:true,title:`${LBL[it.tgt]} (${UNIT[it.tgt]})`,color:COL(it.tgt),q:it.tgt,apexes:findExtrema(it.opts[i].f,it.tgt)}));
+  }
+  [...box.children].forEach((b,i)=>{
+    const cv=b.querySelector('canvas');
+    if(!cv||!it.opts[i])return;
+    plot(cv,{
+      f:it.opts[i].f,
+      step:it.opts[i].step,
+      bounds:it.bounds,
+      labels:true,
+      title:`${LBL[it.tgt]} (${UNIT[it.tgt]})`,
+      color:COL(it.tgt),
+      q:it.tgt,
+      apexes:findExtrema(it.opts[i].f,it.tgt),
+      showRef:S.showRef,
+      hoverT:S.optHoverT[i]
+    });
+  });
+}
+
+function render(){
+  const it=S.item;if(!it)return;
+  $('dirLabel').innerHTML=`${LBL[it.src]}<i>&rarr;</i>${LBL[it.tgt]}`;
+  $('ic').innerHTML=chips(it.m,it.src,it.tgt).map(c=>`<span>${c}</span>`).join('');
+  renderSrc();
+  $('matchBox').hidden=S.mode!=='match';$('buildBox').hidden=S.mode!=='build';
+  if(S.mode==='match'){
+    renderOpts(false);
   }else{
     const tb=$('tiles');tb.style.gridTemplateColumns=it.tgt==='a'?'repeat(3,minmax(0,1fr))':'repeat(3,minmax(0,1fr))';
     tb.innerHTML=TILES[it.tgt].map(([id,n],i)=>`<button type="button" class="tile" data-t="${id}" aria-label="${n}"><span class="k">${i+1}</span>${tileSVG(it.tgt,id)}</button>`).join('');
@@ -958,6 +1133,8 @@ function pressTile(id){
 function resetCurrent(){
   hideReviewBanner();
   S.busy=false;
+  S.srcHoverT = null;
+  S.optHoverT = [null, null, null, null];
   if(!S.item)return;
   if(S.mode==='match'){
     const bs=[...$('opts').children];
@@ -965,10 +1142,12 @@ function resetCurrent(){
       b.classList.remove('good','bad');
       b.querySelectorAll('.opt-tag').forEach(t=>t.remove());
     });
+    renderOpts(true);
   }else{
     S.item.filled=[];
     drawTarget(false);
   }
+  renderSrc();
 }
 
 function resetScore(){
@@ -986,6 +1165,41 @@ $('btnTryAgain').onclick=()=>resetCurrent();
 $('btnReset').onclick=()=>resetCurrent();
 $('btnNewGraph').onclick=()=>next();
 $('btnResetScore').onclick=()=>resetScore();
+if($('btnToggleRef')){
+  $('btnToggleRef').onclick=()=>{
+    S.showRef = !S.showRef;
+    $('btnToggleRef').setAttribute('aria-pressed', S.showRef ? 'true' : 'false');
+    renderSrc();
+    if(S.mode === 'match') renderOpts(true);
+  };
+}
+
+const cSrcCv = $('cSrc');
+if(cSrcCv){
+  cSrcCv.addEventListener('mousemove', e=>{
+    S.srcHoverT = getTFromCanvas(cSrcCv, e.clientX, true);
+    renderSrc();
+  });
+  cSrcCv.addEventListener('mouseleave', ()=>{
+    if(S.srcHoverT != null){
+      S.srcHoverT = null;
+      renderSrc();
+    }
+  });
+  cSrcCv.addEventListener('touchmove', e=>{
+    if(e.touches.length > 0){
+      S.srcHoverT = getTFromCanvas(cSrcCv, e.touches[0].clientX, true);
+      renderSrc();
+    }
+  }, {passive: true});
+  cSrcCv.addEventListener('touchend', ()=>{
+    if(S.srcHoverT != null){
+      S.srcHoverT = null;
+      renderSrc();
+    }
+  });
+}
+
 if($('btnToggleAnalysis')){
   $('btnToggleAnalysis').onclick=()=>{
     const ra=$('reviewAnalysis');
@@ -1160,9 +1374,8 @@ if(btnClose&&gPanel){
 /* boot */
 readTheme();renderDirs();renderStats();hud();next();
 let rz;new ResizeObserver(()=>{clearTimeout(rz);rz=setTimeout(()=>{if(!S.item)return;
-  const srcF=sam(S.item.m,S.item.src);
-  plot($('cSrc'),{f:srcF,step:S.item.src==='a',bounds:S.item.bounds,labels:true,title:`${LBL[S.item.src]} (${UNIT[S.item.src]})`,color:COL(S.item.src),q:S.item.src,apexes:findExtrema(srcF,S.item.src)});
-  if(S.mode==='match')[...$('opts').children].forEach((b,i)=>plot(b.querySelector('canvas'),{f:S.item.opts[i].f,step:S.item.opts[i].step,bounds:S.item.bounds,labels:true,title:`${LBL[S.item.tgt]} (${UNIT[S.item.tgt]})`,color:COL(S.item.tgt),q:S.item.tgt,apexes:findExtrema(S.item.opts[i].f,S.item.tgt)}));
+  renderSrc();
+  if(S.mode==='match')renderOpts(true);
   else drawTarget(S.busy||S.reviewing);
 },60)}).observe($('arena'));
 })();
