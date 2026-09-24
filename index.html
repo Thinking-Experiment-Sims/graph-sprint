@@ -32,7 +32,7 @@
   --bg: #ffffff;
   --app-bg:
     radial-gradient(1200px 700px at 8% 2%, rgba(19, 143, 176, 0.12), transparent 62%),
-    radial-gradient(900px 600px at 92% 98%, rgba(214, 123, 25, 0.12), transparent 66%),
+    radial-gradient(900px 600px at 92% 98%, rgba(220, 132, 32, 0.12), transparent 66%),
     linear-gradient(165deg, #e9f4fb, #fff4dd);
 
   --surface: #ffffff;
@@ -340,7 +340,7 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
     <div class="hero-content">
       <p class="kicker">The Thinking Experiment &bull; Kinematics</p>
       <h1>✨ Graph Sprint</h1>
-      <p class="summary">One graph in, its partner out. Fast reps translating between x&ndash;t, v&ndash;t, and a&ndash;t. Practice untimed with mistake review, or race the clock in 90 s sprint.</p>
+      <p class="summary">One graph in, its partner out. Fast reps translating between x&ndash;t, v&ndash;t, and a&ndash;t. Practice untimed with deep conceptual review, or test fluency in the 90 s sprint.</p>
     </div>
     <div class="hero-actions">
       <button type="button" class="btn ghost" id="btnToggleGuide">📖 Guidance &amp; Reference</button>
@@ -366,11 +366,11 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
         </div>
         <p class="guide-text">Train rapid conceptual recognition and piecewise graph construction.</p>
         <ul class="guide-list">
-          <li><strong>Untimed Practice:</strong> Work at your own pace. If you choose an incorrect graph, the drill pauses so you can compare the graphs and review the physics before moving on.</li>
+          <li><strong>Untimed Practice:</strong> Untimed and pressure-free. Focus on conceptual graph reasoning without a ticking clock. If you make an error, the drill pauses so you can compare the graphs. Click <em>↺ Reset</em> to retry the current graph or <em>↻ New Graph</em> to advance.</li>
           <li><strong>Pick Mode:</strong> Study the source curve. Click or press keys <kbd>1</kbd>&ndash;<kbd>4</kbd> to identify the correct partner graph.</li>
           <li><strong>Build Mode:</strong> Construct the target curve segment-by-segment! Click or press keys <kbd>1</kbd>&ndash;<kbd>9</kbd> to assign shapes to each time interval.</li>
           <li><strong>Sprint (90s):</strong> Race against the clock. Stop anytime with <em>Stop Sprint</em>.</li>
-          <li><strong>New Graph:</strong> Click <em>↻ New Graph</em> anytime to generate a fresh problem without penalty.</li>
+          <li><strong>Reset Controls:</strong> Use <em>↺ Reset</em> to clear current selections, or <em>Reset Score</em> in the HUD to start a fresh practice session.</li>
         </ul>
       </div>
 
@@ -451,7 +451,8 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
       <div class="row" id="dirs"></div>
     </div>
     <div class="grp" style="margin-left:auto;display:flex;gap:8px;align-items:center;">
-      <button class="btn ghost" id="btnResetGraph" type="button" title="Generate a new graph without penalties">↻ New Graph</button>
+      <button class="btn ghost" id="btnReset" type="button" title="Reset current graph attempt">↺ Reset</button>
+      <button class="btn ghost" id="btnNewGraph" type="button" title="Generate a new graph without penalties">↻ New Graph</button>
       <button class="btn btn-accent" id="sprint" type="button">Start 90 s sprint</button>
       <button class="btn danger" id="stopSprint" type="button" hidden>⏹ Stop Sprint</button>
     </div>
@@ -459,10 +460,25 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
 
   <!-- HUD -->
   <div class="hud">
-    <div id="hClock"><small id="hClockL">Problem Time</small><b id="hClockV">0.0 s</b></div>
-    <div><small id="hScoreL">Practice Correct</small><b id="hScore">0</b></div>
-    <div><small>Streak</small><b id="hStreak">0</b></div>
-    <div><small>Last Response</small><b id="hLast">–</b></div>
+    <div id="hBox1">
+      <small id="hBox1L">Accuracy</small>
+      <b id="hBox1V">–</b>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <small id="hScoreL">Practice Correct</small>
+        <button type="button" class="mini" id="btnResetScore" style="padding:1px 6px;font-size:10px;line-height:1.2;" title="Reset session score and streak">Reset Score</button>
+      </div>
+      <b id="hScore">0</b>
+    </div>
+    <div>
+      <small id="hStreakL">Streak</small>
+      <b id="hStreak">0</b>
+    </div>
+    <div id="hBox4">
+      <small id="hBox4L">Pacing</small>
+      <b id="hBox4V" style="font-size:18px;color:var(--primary)">Untimed</b>
+    </div>
   </div>
 
   <!-- Arena -->
@@ -603,7 +619,7 @@ function tileSVG(q,id){const f=TF[id];let d='';for(let k=0;k<=20;k++){const u=k/
 
 /* state */
 const DIRS=['x>v','x>a','v>x','v>a','a>v','a>x'];
-const S={mode:'match',level:'mix',dirs:new Set(DIRS),item:null,t0:0,busy:false,reviewing:false,streak:0,correct:0,sprint:null,last:null};
+const S={mode:'match',level:'mix',dirs:new Set(DIRS),item:null,t0:0,busy:false,reviewing:false,streak:0,correct:0,total:0,sprint:null,last:null};
 let stats={match:{},build:{}},best={match:0,build:0};
 try{const s=JSON.parse(localStorage.getItem('gs-stats')||'null');if(s&&s.match)stats=s;const b=JSON.parse(localStorage.getItem('gs-best')||'null');if(b)best=Object.assign(best,b)}catch(e){}
 const save=()=>{try{localStorage.setItem('gs-stats',JSON.stringify(stats));localStorage.setItem('gs-best',JSON.stringify(best))}catch(e){}};
@@ -703,7 +719,10 @@ function drawTarget(show){
 function record(ok){
   const dt=(performance.now()-S.t0)/1000,st=stats[S.mode][S.item.dir]||(stats[S.mode][S.item.dir]={n:0,c:0,ts:0});
   st.n++;if(ok){st.c++;st.ts+=dt}save();
-  S.streak=ok?S.streak+1:0;if(ok)S.correct++;S.last=dt;
+  S.total=(S.total||0)+1;
+  S.streak=ok?S.streak+1:0;
+  if(ok)S.correct++;
+  S.last=dt;
   if(S.sprint){S.sprint.n++;if(ok){S.sprint.c++;S.sprint.ts+=dt}}
   hud();renderStats();
 }
@@ -757,9 +776,10 @@ function pressTile(id){
   }
 }
 
-function tryAgainCurrent(){
+function resetCurrent(){
   hideReviewBanner();
   S.busy=false;
+  if(!S.item)return;
   if(S.mode==='match'){
     const bs=[...$('opts').children];
     bs.forEach(b=>{
@@ -772,17 +792,27 @@ function tryAgainCurrent(){
   }
 }
 
+function resetScore(){
+  S.correct=0;
+  S.total=0;
+  S.streak=0;
+  S.last=null;
+  hud();
+}
+
 $('tiles').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)pressTile(b.dataset.t)});
 $('undo').onclick=()=>{if(S.busy||!S.item||!S.item.filled||S.reviewing)return;S.item.filled.pop();drawTarget()};
 $('btnNextGraph').onclick=()=>next();
-$('btnTryAgain').onclick=()=>tryAgainCurrent();
-$('btnResetGraph').onclick=()=>next();
+$('btnTryAgain').onclick=()=>resetCurrent();
+$('btnReset').onclick=()=>resetCurrent();
+$('btnNewGraph').onclick=()=>next();
+$('btnResetScore').onclick=()=>resetScore();
 
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey||!S.item||!$('over').hidden)return;
   if(S.reviewing){
     if(e.key===' '||e.key==='Enter'){e.preventDefault();next()}
-    else if(e.key.toLowerCase()==='r'){e.preventDefault();tryAgainCurrent()}
+    else if(e.key.toLowerCase()==='r'){e.preventDefault();resetCurrent()}
     return;
   }
   const n=parseInt(e.key,10);
@@ -792,20 +822,41 @@ document.addEventListener('keydown',e=>{
 
 /* HUD + sprint */
 function hud(){
-  $('hScoreL').textContent=S.sprint?'Sprint correct':'Practice correct';
-  $('hScore').textContent=S.sprint?S.sprint.c:S.correct;
-  $('hStreak').textContent=S.streak;
-  $('hLast').textContent=S.last==null?'–':S.last.toFixed(1)+' s';
-  $('hClockL').textContent=S.sprint?'Sprint Time Left':'Problem Time';
-  $('hClock').classList.toggle('run',!!S.sprint);
+  if(S.sprint){
+    $('hBox1L').textContent='Sprint Time Left';
+    $('hBox1').classList.add('run');
+    const left=Math.max(0,S.sprint.end-performance.now())/1000;
+    $('hBox1V').textContent=left.toFixed(1)+' s';
+    $('hScoreL').textContent='Sprint Correct';
+    $('hScore').textContent=S.sprint.c;
+    $('hStreakL').textContent='Sprint Streak';
+    $('hStreak').textContent=S.streak;
+    $('hBox4L').textContent='Last Graph';
+    $('hBox4V').style.fontSize='24px';
+    $('hBox4V').style.color='var(--ink)';
+    $('hBox4V').textContent=S.last==null?'–':S.last.toFixed(1)+' s';
+  }else{
+    $('hBox1L').textContent='Accuracy';
+    $('hBox1').classList.remove('run');
+    const acc=S.total?Math.round((S.correct/S.total)*100)+'%':'–';
+    $('hBox1V').textContent=acc;
+    $('hScoreL').textContent='Practice Correct';
+    $('hScore').textContent=S.correct;
+    $('hStreakL').textContent='Streak';
+    $('hStreak').textContent=S.streak;
+    $('hBox4L').textContent='Pacing';
+    $('hBox4V').style.fontSize='18px';
+    $('hBox4V').style.color='var(--primary)';
+    $('hBox4V').textContent='Untimed';
+  }
 }
+
+/* Timer ticks ONLY during active sprints - practice mode is untimed */
 setInterval(()=>{
   if(S.sprint){
     const left=Math.max(0,S.sprint.end-performance.now())/1000;
-    $('hClockV').textContent=left.toFixed(1)+' s';
+    $('hBox1V').textContent=left.toFixed(1)+' s';
     if(left<=0&&!S.busy)sprintOver();
-  }else if(S.item&&!S.busy&&!S.reviewing){
-    $('hClockV').textContent=((performance.now()-S.t0)/1000).toFixed(1)+' s';
   }
 },100);
 
