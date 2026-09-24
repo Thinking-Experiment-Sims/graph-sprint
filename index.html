@@ -726,28 +726,18 @@ function plot(cv,o){
   g.save();g.beginPath();g.rect(L,Tp-2,pw,ph+4);g.clip();g.strokeStyle=o.color;g.lineWidth=o.labels?2.7:2.4;g.lineCap='round';g.lineJoin='round';g.beginPath();
   o.f.forEach((v,k)=>{const x=X(k*T/(NS-1)),y=Y(v);if(k===0||(o.step&&Math.abs(v-o.f[k-1])>1e-9))g.moveTo(x,y);else g.lineTo(x,y)});g.stroke();g.restore();
 
-  // Draw Apex Dots if present and relevant to this quantity
-  if(o.apexes && o.apexes.length && (o.q === 'x' || o.q === 'v')){
+  // Draw Apex Dot on x-t parabolas
+  if(o.apexes && o.apexes.length && o.q === 'x'){
     o.apexes.forEach(pt=>{
       const px = Math.round(X(pt.t)) + 0.5;
-      const py = Math.round(o.q === 'x' ? Y(pt.x) : Y(0)) + 0.5;
+      const py = Math.round(Y(pt.x)) + 0.5;
       if(px >= L && px <= L + pw && py >= Tp - 4 && py <= Tp + ph + 4){
-        g.fillStyle = 'rgba(214, 123, 25, 0.25)';
-        g.beginPath(); g.arc(px, py, 7, 0, 2*Math.PI); g.fill();
+        g.fillStyle = 'rgba(214, 123, 25, 0.22)';
+        g.beginPath(); g.arc(px, py, 6.5, 0, 2*Math.PI); g.fill();
         g.strokeStyle = '#d67b19'; g.lineWidth = 2.2;
         g.beginPath(); g.arc(px, py, 4.5, 0, 2*Math.PI); g.stroke();
         g.fillStyle = '#ffffff';
         g.beginPath(); g.arc(px, py, 2.5, 0, 2*Math.PI); g.fill();
-        if(o.labels && w > 230){
-          g.fillStyle = '#8a4704'; g.font = 'bold 9.5px system-ui,sans-serif'; g.textAlign = 'center';
-          if(o.q === 'x'){
-            g.textBaseline = pt.a < 0 ? 'bottom' : 'top';
-            g.fillText('apex (v=0)', px, pt.a < 0 ? py - 8 : py + 8);
-          } else if(o.q === 'v'){
-            g.textBaseline = 'bottom';
-            g.fillText('v=0', px, py - 6);
-          }
-        }
       }
     });
   }
@@ -820,7 +810,7 @@ function getMotionAnalysis(m,src,tgt){
   });
   let apexInfo='';
   if(extX.length>0){
-    apexInfo=`<div class="apex-note">🎯 <strong>Turnaround Apex:</strong> At t = ${extX.map(p=>p.t.toFixed(1)+' s').join(', ')}, velocity crosses zero (v = 0). This creates a horizontal tangent peak or valley on x&ndash;t and a zero-crossing on v&ndash;t.</div>`;
+    apexInfo=`<div class="apex-note">🎯 <strong>Apex:</strong> At t = ${extX.map(p=>p.t.toFixed(1)+' s').join(', ')}, the position curve reaches an apex (turnaround point with horizontal tangent).</div>`;
   }
   let initInfo='';
   if(src==='a'||(src==='v'&&tgt==='x')){
