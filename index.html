@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Graph Sprint - The Thinking Experiment</title>
+<title>Graph Sprint: Kinematics Translations Studio | The Thinking Experiment</title>
 <meta name="description" content="Kinematics fluency drill for translating between position, velocity, and acceleration graphs under uniform acceleration with untimed practice and 90s sprint modes.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -91,52 +91,102 @@ body{
 .wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:16px 40px;display:flex;flex-direction:column;gap:12px}
 
 .hero{
-  background:linear-gradient(160deg, #ffffff, #f7fbfd);
   border:1px solid var(--border);
   border-radius:16px;
-  padding:20px 24px;
+  padding:1.25rem 1.6rem;
+  background:linear-gradient(160deg, #ffffff, #f7fbfd);
   box-shadow:0 4px 16px rgba(12, 54, 68, 0.06);
   position:relative;
   overflow:hidden;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:16px;
-  flex-wrap:wrap;
+  margin-bottom:0.25rem;
 }
 .hero::before{
   content:"";
   position:absolute;
   inset:0 auto 0 0;
-  width:10px;
+  width:12px;
   background:var(--primary);
   border-radius:16px 0 0 16px;
 }
-.hero-content{flex:1 1 540px}
-.kicker{
-  font-size:11px;
+.hero-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  gap:1rem;
+  padding-left:0.4rem;
+}
+.hero-badges{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:0.45rem;
+  margin-bottom:0.35rem;
+}
+.brand-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:0.35rem;
+  background:var(--teal-100);
+  color:var(--teal-900);
+  border:1px solid var(--border);
+  font-size:0.8rem;
+  font-weight:600;
+  padding:0.25rem 0.65rem;
+  border-radius:999px;
+  text-decoration:none;
+  transition:background 0.2s, transform 0.15s;
+}
+.brand-badge:hover{
+  background:#d5edf5;
+  transform:translateY(-1px);
+}
+.lab-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:0.35rem;
+  background:var(--amber-100);
+  color:#8a4704;
+  border:1px solid var(--amber-300);
+  font-size:0.8rem;
+  font-weight:600;
+  padding:0.25rem 0.65rem;
+  border-radius:999px;
+}
+.guide-btn-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:0.35rem;
+  background:#ffffff;
+  color:var(--teal-900);
+  border:1px solid var(--border);
+  font-size:0.8rem;
+  font-weight:600;
+  padding:0.25rem 0.75rem;
+  border-radius:999px;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+.guide-btn-badge:hover{
+  background:var(--teal-100);
+  border-color:var(--teal-500);
+  transform:translateY(-1px);
+}
+.hero h1{
+  font-family:"IBM Plex Sans", "Inter", sans-serif;
+  font-size:clamp(1.4rem, 2.2vw, 1.95rem);
   font-weight:700;
-  letter-spacing:0.09em;
-  text-transform:uppercase;
-  color:var(--primary);
-  margin:0 0 4px 0;
+  color:var(--primary-deep);
+  margin:0.25rem 0 0 0;
+  letter-spacing:-0.015em;
 }
-h1{
-  margin:2px 0 6px;
-  font-size:clamp(24px,3.8vw,32px);
-  line-height:1.15;
-  color:var(--primary);
-  font-weight:800;
-}
-.summary{
-  margin:0;
-  border-left:4px solid var(--accent);
-  padding-left:12px;
-  font-size:14px;
+.hero-subtitle{
+  font-size:0.92rem;
+  color:var(--muted);
+  max-width:960px;
+  margin:0.35rem 0 0 0;
   line-height:1.5;
-  color:var(--text-300);
 }
-.hero-actions{display:flex;gap:10px;align-items:center}
 
 /* Guidance Panel */
 .guide-panel{
@@ -337,18 +387,25 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
 
 <div class="wrap">
   <header class="hero">
-    <div class="hero-content">
-      <p class="kicker">The Thinking Experiment &bull; Kinematics</p>
-      <h1>✨ Graph Sprint</h1>
-      <p class="summary">One graph in, its partner out. Fast reps translating between x&ndash;t, v&ndash;t, and a&ndash;t. Practice untimed with deep conceptual review, or test fluency in the 90 s sprint.</p>
-    </div>
-    <div class="hero-actions">
-      <button type="button" class="btn ghost" id="btnToggleGuide">📖 Guidance &amp; Reference</button>
+    <div class="hero-top">
+      <div>
+        <div class="hero-badges">
+          <a href="https://thinking-experiment-sims.github.io/interactive-physics/" class="brand-badge" title="Return to Physics Simulations Hub">← The Thinking Experiment</a>
+          <span class="lab-badge">🎯 Physics Inquiry Lab</span>
+          <button type="button" class="guide-btn-badge" id="btnToggleGuide" aria-expanded="false">
+            📘 Guided Activities &amp; How-To
+          </button>
+        </div>
+        <h1>Graph Sprint: Kinematics Translations Studio</h1>
+        <p class="hero-subtitle">
+          Translate between <strong>position (x–t)</strong>, <strong>velocity (v–t)</strong>, and <strong>acceleration (a–t)</strong> graphs under uniform acceleration. Practice untimed with deep conceptual review, or test rapid automaticity in the <strong>90 s sprint</strong>.
+        </p>
+      </div>
     </div>
   </header>
 
-  <!-- Interactive Guidance & Rules Panel -->
-  <section class="guide-panel" id="guidePanel" aria-label="Interactive Guidance and Physics Principles">
+  <!-- Interactive Guidance & Rules Panel (Collapsible Drawer) -->
+  <section class="guide-panel" id="guidePanel" aria-label="Interactive Guidance and Physics Principles" hidden>
     <div class="guide-header">
       <div class="guide-title-wrap">
         <span class="guide-kicker">Pedagogical Guide &amp; Physics Reference</span>
@@ -943,14 +1000,24 @@ const gPanel=$('guidePanel'),btnToggle=$('btnToggleGuide'),btnClose=$('btnCloseG
 if(btnToggle&&gPanel){
   btnToggle.onclick=()=>{
     const isHidden=gPanel.hasAttribute('hidden');
-    if(isHidden){gPanel.removeAttribute('hidden');btnToggle.textContent='📖 Hide Guidance';btnToggle.classList.remove('ghost')}
-    else{gPanel.setAttribute('hidden','');btnToggle.textContent='📖 Guidance & Reference';btnToggle.classList.add('ghost')}
+    if(isHidden){
+      gPanel.removeAttribute('hidden');
+      btnToggle.setAttribute('aria-expanded','true');
+      btnToggle.innerHTML='✕ Close Guide';
+    }else{
+      gPanel.setAttribute('hidden','');
+      btnToggle.setAttribute('aria-expanded','false');
+      btnToggle.innerHTML='📘 Guided Activities &amp; How-To';
+    }
   };
 }
 if(btnClose&&gPanel){
   btnClose.onclick=()=>{
     gPanel.setAttribute('hidden','');
-    if(btnToggle){btnToggle.textContent='📖 Guidance & Reference';btnToggle.classList.add('ghost')}
+    if(btnToggle){
+      btnToggle.setAttribute('aria-expanded','false');
+      btnToggle.innerHTML='📘 Guided Activities &amp; How-To';
+    }
   };
 }
 
