@@ -6,10 +6,14 @@
 <title>Graph Sprint - The Thinking Experiment</title>
 <meta name="description" content="Timed kinematics fluency drill for translating between position, velocity, and acceleration graphs under uniform acceleration.">
 <link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 
 :root{
+  color-scheme: light;
   --teal-900: #0b5f77;
   --teal-500: #0f7e9b;
   --teal-400: #13a1c4;
@@ -27,8 +31,8 @@
 
   --bg: #ffffff;
   --app-bg:
-    radial-gradient(1200px 700px at 8% 2%, rgba(19, 143, 176, 0.14), transparent 62%),
-    radial-gradient(900px 600px at 92% 98%, rgba(220, 132, 32, 0.14), transparent 66%),
+    radial-gradient(1200px 700px at 8% 2%, rgba(19, 143, 176, 0.12), transparent 62%),
+    radial-gradient(900px 600px at 92% 98%, rgba(220, 132, 32, 0.12), transparent 66%),
     linear-gradient(165deg, #e9f4fb, #fff4dd);
 
   --surface: #ffffff;
@@ -61,70 +65,6 @@
   --segline: #8ea7b3;
 }
 
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --bg:#0c171e;
-    --app-bg:#0c171e;
-    --surface:#15242c;
-    --surface2:#1c313c;
-    --ink:#f0f8fa;
-    --body:#c0d5df;
-    --muted:#85a1af;
-    --line:#264350;
-    --grid:#1a2f3a;
-    --axis:#6a8d9e;
-    --accent:#22b0d3;
-    --accent-soft:#113847;
-    --title:#22b0d3;
-    --eyebrow:#4ec7e6;
-    --gold:#e8962f;
-    --gold-ink:#fed391;
-    --warm:#36230f;
-    --btn:#0f7e9b;
-    --btn-ink:#ffffff;
-    --cx:#5fa3ef;
-    --cv:#25c4b1;
-    --ca:#f59e0b;
-    --good:#34d399;
-    --good-soft:#102e23;
-    --bad:#f87171;
-    --bad-soft:#331a1e;
-    --segline:#4b6a7a;
-  }
-}
-
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#0c171e;
-  --app-bg:#0c171e;
-  --surface:#15242c;
-  --surface2:#1c313c;
-  --ink:#f0f8fa;
-  --body:#c0d5df;
-  --muted:#85a1af;
-  --line:#264350;
-  --grid:#1a2f3a;
-  --axis:#6a8d9e;
-  --accent:#22b0d3;
-  --accent-soft:#113847;
-  --title:#22b0d3;
-  --eyebrow:#4ec7e6;
-  --gold:#e8962f;
-  --gold-ink:#fed391;
-  --warm:#36230f;
-  --btn:#0f7e9b;
-  --btn-ink:#ffffff;
-  --cx:#5fa3ef;
-  --cv:#25c4b1;
-  --ca:#f59e0b;
-  --good:#34d399;
-  --good-soft:#102e23;
-  --bad:#f87171;
-  --bad-soft:#331a1e;
-  --segline:#4b6a7a;
-}
-
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 
@@ -135,6 +75,7 @@ body{
   font-size:14px;
   min-height:100vh;
   margin:0;
+  color-scheme: light;
 }
 
 .bg-grid{
@@ -184,7 +125,7 @@ h1{
   margin:2px 0 6px;
   font-size:clamp(24px,3.8vw,32px);
   line-height:1.15;
-  color:var(--ink);
+  color:var(--primary);
   font-weight:800;
 }
 .summary{
@@ -283,8 +224,8 @@ h1{
 .btn:hover{background:var(--primary-deep);border-color:var(--primary-deep)}
 .btn.ghost{background:var(--surface);color:var(--primary);border-color:var(--line)}
 .btn.ghost:hover{background:var(--accent-soft);border-color:var(--primary)}
-.btn-accent{background:var(--accent);border-color:var(--accent);color:#ffffff}
-.btn-accent:hover{background:#bf6a13;border-color:#bf6a13}
+.btn-accent{background:var(--accent)!important;border-color:var(--accent)!important;color:#ffffff!important}
+.btn-accent:hover{background:#bf6a13!important;border-color:#bf6a13!important}
 .mini{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--body);border-radius:8px;padding:4px 10px;cursor:pointer;transition:all .15s ease}
 .mini:hover{background:var(--surface);border-color:var(--primary);color:var(--primary)}
 button:focus-visible{outline:2.5px solid var(--gold);outline-offset:2px}
@@ -357,7 +298,7 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
     <div class="guide-header">
       <div class="guide-title-wrap">
         <span class="guide-kicker">Pedagogical Guide &amp; Physics Reference</span>
-        <h2>Translating Kinematic Graphs ($x&ndash;t \leftrightarrow v&ndash;t \leftrightarrow a&ndash;t$)</h2>
+        <h2>Translating Kinematic Graphs (x–t &harr; v–t &harr; a–t)</h2>
       </div>
       <button type="button" class="mini" id="btnCloseGuide" aria-label="Close guide">✕ Close Guide</button>
     </div>
@@ -382,19 +323,19 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
       <div class="guide-card">
         <div class="guide-card-top">
           <span class="guide-icon">📐</span>
-          <h3>Slope Rules ($x \rightarrow v \rightarrow a$)</h3>
+          <h3>Slope Rules (x &rarr; v &rarr; a)</h3>
         </div>
         <p class="guide-text">Remember: <strong>Slope takes you down</strong> from Position to Velocity to Acceleration.</p>
         <ul class="guide-list">
-          <li><strong>$x&ndash;t \rightarrow v&ndash;t$ (Slope of Position is Velocity):</strong>
-            <br>&bull; Tangent slope is positive $\implies v > 0$ (above zero axis).
-            <br>&bull; Tangent slope is negative $\implies v < 0$ (below zero axis).
-            <br>&bull; Horizontal tangent / peak / valley $\implies v = 0$ (instantaneous stop / turnaround).
+          <li><strong>x–t &rarr; v–t (Slope of Position is Velocity):</strong>
+            <br>&bull; Tangent slope is positive &rArr; v &gt; 0 (above zero time axis).
+            <br>&bull; Tangent slope is negative &rArr; v &lt; 0 (below zero time axis).
+            <br>&bull; Horizontal tangent / peak / valley &rArr; v = 0 (instantaneous rest / turnaround).
           </li>
-          <li><strong>$v&ndash;t \rightarrow a&ndash;t$ (Slope of Velocity is Acceleration):</strong>
-            <br>&bull; Rising straight line ($/$)$\implies$ constant positive $+a$.
-            <br>&bull; Falling straight line ($\backslash$)$\implies$ constant negative $-a$.
-            <br>&bull; Horizontal line ($-$) $\implies a = 0$ (constant velocity).
+          <li><strong>v–t &rarr; a–t (Slope of Velocity is Acceleration):</strong>
+            <br>&bull; Rising straight line (/) &rArr; constant positive acceleration (+a).
+            <br>&bull; Falling straight line (\) &rArr; constant negative acceleration (&minus;a).
+            <br>&bull; Horizontal line (&mdash;) &rArr; zero acceleration (a = 0).
           </li>
         </ul>
       </div>
@@ -408,17 +349,17 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
         <p class="guide-text">Remember: <strong>Area takes you up</strong> from Acceleration to Velocity to Position.</p>
         <ul class="guide-list">
           <li><strong>Area Under Curves:</strong>
-            <br>&bull; Area under $a&ndash;t$ between $t_1$ and $t_2 = \Delta v$ (change in velocity).
-            <br>&bull; Area under $v&ndash;t$ between $t_1$ and $t_2 = \Delta x$ (displacement).
+            <br>&bull; Area under a–t curve between t<sub>1</sub> and t<sub>2</sub> = &Delta;v (change in velocity).
+            <br>&bull; Area under v–t curve between t<sub>1</sub> and t<sub>2</sub> = &Delta;x (displacement).
           </li>
-          <li><strong>Concavity on $x&ndash;t$:</strong>
-            <br>&bull; <em>Concave up ($\cup$):</em> Positive acceleration ($a > 0$).
-            <br>&bull; <em>Concave down ($\cap$):</em> Negative acceleration ($a < 0$).
-            <br>&bull; <em>Straight (no curve):</em> Zero acceleration ($a = 0$).
+          <li><strong>Concavity on x–t:</strong>
+            <br>&bull; <em>Concave up (&cup;, smiling curve):</em> Positive acceleration (a &gt; 0).
+            <br>&bull; <em>Concave down (&cap;, frowning curve):</em> Negative acceleration (a &lt; 0).
+            <br>&bull; <em>Straight line (no curve):</em> Zero acceleration (a = 0).
           </li>
           <li><strong>Speeding Up vs Slowing Down:</strong>
-            <br>&bull; Same signs ($v>0, a>0$ or $v<0, a<0$)$\implies$ speeding up (moving away from $v=0$).
-            <br>&bull; Opposite signs ($v>0, a<0$ or $v<0, a>0$)$\implies$ slowing down (approaching $v=0$).
+            <br>&bull; Same signs (v &gt; 0, a &gt; 0 OR v &lt; 0, a &lt; 0) &rArr; speeding up (moving away from v = 0).
+            <br>&bull; Opposite signs (v &gt; 0, a &lt; 0 OR v &lt; 0, a &gt; 0) &rArr; slowing down (approaching v = 0).
           </li>
         </ul>
       </div>
@@ -701,9 +642,6 @@ if(btnClose&&gPanel){
 readTheme();renderDirs();renderStats();hud();next();
 let rz;new ResizeObserver(()=>{clearTimeout(rz);rz=setTimeout(()=>{if(!S.item)return;plot($('cSrc'),{f:sam(S.item.m,S.item.src),step:S.item.src==='a',bounds:S.item.bounds,labels:true,color:COL(S.item.src)});
   if(S.mode==='match')[...$('opts').children].forEach((b,i)=>plot(b.querySelector('canvas'),{f:S.item.opts[i].f,step:S.item.opts[i].step,bounds:S.item.bounds,labels:false,color:COL(S.item.tgt)}));else drawTarget(S.busy)},60)}).observe($('arena'));
-const retheme=()=>{readTheme();render()};
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',retheme)}catch(e){}
-new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 })();
 </script>
 </body>
