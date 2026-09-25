@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Graph Sprint: Kinematics Translations Studio | The Thinking Experiment</title>
 <meta name="description" content="Kinematics fluency drill for translating between position, velocity, and acceleration graphs under uniform acceleration with untimed practice and 90s sprint modes.">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -1301,12 +1304,17 @@ function drawTarget(show){
       });
       g.stroke();
     } else {
-      for(let k=0; k<=160; k++){
-        const t = k * T / 160;
-        const v = stateAt(it.m, t)[q];
-        const x = X(t), y = Y(v);
-        k === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
-      }
+      it.m.segs.forEach((s, idx)=>{
+        const N_SUB = 35;
+        for(let k=0; k<=N_SUB; k++){
+          if(idx > 0 && k === 0) continue;
+          const t = s.t0 + (k / N_SUB) * (s.t1 - s.t0);
+          const v = stateAt(it.m, t)[q];
+          const x = X(t), y = Y(v);
+          if(idx === 0 && k === 0) g.moveTo(x, y);
+          else g.lineTo(x, y);
+        }
+      });
       g.stroke();
     }
     // Draw apexes if x-t
