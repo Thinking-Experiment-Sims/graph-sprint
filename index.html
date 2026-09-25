@@ -309,7 +309,7 @@ canvas{display:block;width:100%}
 .opt-tag.good{background:var(--good);color:#ffffff}
 .opt-tag.bad{background:var(--bad);color:#ffffff}
 
-.tgt{height:170px}
+.tgt{height:195px}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
 .tile{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--surface2);cursor:pointer;padding:8px 4px 4px;display:flex;justify-content:center;transition:all .15s ease}
 .tile:hover{border-color:var(--primary);background:var(--surface)}
@@ -318,6 +318,28 @@ canvas{display:block;width:100%}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .flash-good{box-shadow:0 0 0 3px var(--good)}
 .flash-bad{box-shadow:0 0 0 3px var(--bad)}
+
+/* Build Mode Review Header & Legend */
+.build-review-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;padding:6px 10px;background:var(--surface2);border:1px solid var(--line);border-radius:8px}
+.build-legend{display:flex;align-items:center;gap:14px;font-size:12px}
+.legend-item{display:flex;align-items:center;gap:6px;color:var(--ink)}
+.legend-line{display:inline-block;width:22px;height:3px;border-radius:2px}
+.line-solid{background:var(--primary)}
+.line-dashed{background:repeating-linear-gradient(to right,var(--bad),var(--bad) 4px,transparent 4px,transparent 7px);height:3px}
+.build-view-toggle.seg{display:inline-flex;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.build-view-toggle.seg button{padding:3px 9px;font-size:11.5px;border:none;background:transparent;cursor:pointer;font-family:inherit;color:var(--muted);font-weight:600;transition:all .15s ease}
+.build-view-toggle.seg button.active{background:var(--accent);color:#ffffff}
+.build-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.breakdown-card{padding:8px 10px;border-radius:8px;font-size:11.5px;border:1px solid var(--line);background:var(--surface)}
+.breakdown-card.good{border-color:var(--good);background:var(--good-soft)}
+.breakdown-card.bad{border-color:var(--bad);background:var(--bad-soft)}
+.breakdown-header{font-weight:700;display:flex;justify-content:space-between;margin-bottom:4px}
+.breakdown-title{color:var(--ink)}
+.breakdown-status.good{color:var(--good)}
+.breakdown-status.bad{color:var(--bad)}
+.breakdown-details{line-height:1.35;color:var(--ink)}
+.breakdown-details .user-pick{color:var(--bad);font-weight:600}
+.breakdown-details .correct-pick{color:var(--primary-deep);font-weight:600}
 
 /* Review & Feedback Banner */
 .review-banner{
@@ -584,11 +606,26 @@ td.d{font-weight:800;color:var(--ink);white-space:nowrap}
     <div class="card" id="ansCard">
       <div id="matchBox"><div class="opts" id="opts"></div></div>
       <div id="buildBox" hidden>
+        <!-- Review Header & View Controls (Shown on Review) -->
+        <div id="buildReviewHeader" class="build-review-header" hidden>
+          <div class="build-legend">
+            <span class="legend-item"><span class="legend-line line-solid" id="legSolidLine"></span> <strong id="legCorrectTxt">Correct Solution</strong></span>
+            <span class="legend-item"><span class="legend-line line-dashed"></span> <strong>Your Pick</strong></span>
+          </div>
+          <div class="build-view-toggle seg" id="buildViewToggle">
+            <button type="button" data-view="both" class="active" aria-pressed="true">Compare</button>
+            <button type="button" data-view="user" aria-pressed="false">Your Build</button>
+            <button type="button" data-view="correct" aria-pressed="false">Correct</button>
+          </div>
+        </div>
+
         <canvas class="tgt" id="cTgt"></canvas>
-        <div class="row" style="justify-content:space-between;margin-top:8px">
+        <div class="row" id="buildActionRow" style="justify-content:space-between;margin-top:8px">
           <span id="slotInfo" style="font-size:13px;color:var(--muted)"></span>
           <button class="mini" id="undo" type="button">Undo (&#9003;)</button>
         </div>
+        <!-- Interval-by-Interval Breakdown Cards (Shown on Review) -->
+        <div id="buildBreakdown" class="build-breakdown" hidden></div>
         <div class="tiles" id="tiles"></div>
       </div>
 
@@ -698,6 +735,7 @@ const TILES={
   a:[['ap','positive',()=>.55],['a0','zero',()=>0],['an','negative',()=>-.55]]
 };
 const TF={};Object.values(TILES).flat().forEach(([id,n,f])=>TF[id]=f);
+const tileName=(tgt,id)=>{const f=(TILES[tgt]||[]).find(([tId])=>tId===id);return f?f[1]:id};
 function cls(q,m,s){
   const vs=stateAt(m,s.t0).v,ve=stateAt(m,s.t1).v,a=s.a;
   if(q==='a')return a>0?'ap':a<0?'an':'a0';
@@ -841,7 +879,7 @@ function tileSVG(q,id){const f=TF[id];let d='';for(let k=0;k<=20;k++){const u=k/
 
 /* state */
 const DIRS=['x>v','x>a','v>x','v>a','a>v','a>x'];
-const S={mode:'match',level:'mix',dirs:new Set(DIRS),item:null,t0:0,busy:false,reviewing:false,streak:0,correct:0,total:0,sprint:null,last:null,showRef:false,srcHoverT:null,optHoverT:[null,null,null,null]};
+const S={mode:'match',level:'mix',dirs:new Set(DIRS),item:null,t0:0,busy:false,reviewing:false,streak:0,correct:0,total:0,sprint:null,last:null,showRef:false,srcHoverT:null,optHoverT:[null,null,null,null],buildView:'both'};
 let stats={match:{},build:{}},best={match:0,build:0};
 try{const s=JSON.parse(localStorage.getItem('gs-stats')||'null');if(s&&s.match)stats=s;const b=JSON.parse(localStorage.getItem('gs-best')||'null');if(b)best=Object.assign(best,b)}catch(e){}
 const save=()=>{try{localStorage.setItem('gs-stats',JSON.stringify(stats));localStorage.setItem('gs-best',JSON.stringify(best))}catch(e){}};
@@ -919,6 +957,10 @@ function hideReviewBanner(){
   $('reviewBanner').hidden=true;
   if($('reviewAnalysis')) $('reviewAnalysis').hidden=true;
   if($('btnToggleAnalysis')) $('btnToggleAnalysis').textContent='💡 Show Physics Analysis';
+  if($('buildReviewHeader')) $('buildReviewHeader').hidden=true;
+  if($('buildBreakdown')) $('buildBreakdown').hidden=true;
+  if($('tiles')) $('tiles').hidden=false;
+  if($('buildActionRow')) $('buildActionRow').hidden=false;
   S.reviewing=false;
 }
 
@@ -937,6 +979,13 @@ function next(){
   hideReviewBanner();
   S.srcHoverT = null;
   S.optHoverT = [null, null, null, null];
+  S.buildView = 'both';
+  if($('buildViewToggle')){
+    [...$('buildViewToggle').children].forEach((b,idx)=>{
+      b.classList.toggle('active', idx===0);
+      b.setAttribute('aria-pressed', idx===0?'true':'false');
+    });
+  }
   if(!S.dirs.size)S.dirs.add('x>v');
   const dir=pick([...S.dirs]),[src,tgt]=dir.split('>');const m=gen(S.level);
   S.item={dir,src,tgt,m,bounds:m.segs.slice(1).map(s=>s.t0)};
@@ -1044,30 +1093,317 @@ function render(){
   if(S.mode==='match'){
     renderOpts(false);
   }else{
+    if($('buildReviewHeader')) $('buildReviewHeader').hidden=true;
+    if($('buildBreakdown')) $('buildBreakdown').hidden=true;
+    if($('tiles')) $('tiles').hidden=false;
+    if($('buildActionRow')) $('buildActionRow').hidden=false;
     const tb=$('tiles');tb.style.gridTemplateColumns=it.tgt==='a'?'repeat(3,minmax(0,1fr))':'repeat(3,minmax(0,1fr))';
     tb.innerHTML=TILES[it.tgt].map(([id,n],i)=>`<button type="button" class="tile" data-t="${id}" aria-label="${n}"><span class="k">${i+1}</span>${tileSVG(it.tgt,id)}</button>`).join('');
-    drawTarget();
+    drawTarget(false);
   }
 }
 
 function drawTarget(show){
-  const it=S.item,cv=$('cTgt'),{g,w,h}=fit(cv),L=38,R=10,Tp=8,B=22,pw=w-L-R,ph=h-Tp-B,X=t=>L+t/T*pw,mid=Tp+ph/2;
-  g.fillStyle=C.surface;g.fillRect(0,0,w,h);
-  g.strokeStyle=C.grid;g.lineWidth=1;g.beginPath();for(let t=0;t<=T;t++){const x=Math.round(X(t))+.5;g.moveTo(x,Tp);g.lineTo(x,Tp+ph)}g.stroke();
-  g.save();g.setLineDash([4,4]);g.strokeStyle=C.segline;g.lineWidth=1.5;g.beginPath();it.bounds.forEach(b=>{g.moveTo(X(b),Tp);g.lineTo(X(b),Tp+ph)});g.stroke();g.restore();
-  if(it.tgt!=='x'){g.strokeStyle=C.axis;g.lineWidth=1.4;g.beginPath();g.moveTo(L,mid);g.lineTo(L+pw,mid);g.stroke()}
-  g.fillStyle=C.muted;g.font='10px system-ui,-apple-system,Segoe UI,sans-serif';g.textAlign='center';g.textBaseline='top';for(let t=0;t<=T;t+=(w<380?2:1))g.fillText(t===T?'8 s':String(t),Math.min(X(t),L+pw-6),Tp+ph+5);
-  g.fillStyle=COL(it.tgt);g.font='bold 11px system-ui,-apple-system,sans-serif';g.textAlign='left';g.textBaseline='top';g.fillText(`${LBL[it.tgt]} (${UNIT[it.tgt]})`,L+5,Tp+2);
+  const it=S.item;if(!it)return;
+  const cv=$('cTgt'),{g,w,h}=fit(cv),q=it.tgt;
+  const L=38,R=10,Tp=8,B=22,pw=w-L-R,ph=h-Tp-B;
+  const trueF=sam(it.m,q);
+  const mx=Math.max(...trueF.map(Math.abs));
+  const M=niceCeil(mx*1.08||1);
+  const X=t=>L+t/T*pw,Y=v=>Tp+(M-v)/(2*M)*ph;
+  const mid=Y(0);
 
-  it.m.segs.forEach((s,i)=>{
-    const x0=X(s.t0)+4,x1=X(s.t1)-4;
-    if(i===it.filled.length&&!show){g.fillStyle=C.gold;g.globalAlpha=.16;g.fillRect(X(s.t0)+1,Tp,X(s.t1)-X(s.t0)-2,ph);g.globalAlpha=1}
-    const drawShape=(id,col,dash)=>{const f=TF[id];g.save();g.strokeStyle=col;g.lineWidth=3;g.setLineDash(dash||[]);g.lineCap='round';g.beginPath();for(let k=0;k<=30;k++){const u=k/30,x=x0+u*(x1-x0),y=mid-f(u)*ph*.42;k?g.lineTo(x,y):g.moveTo(x,y)}g.stroke();g.restore()};
-    const id=it.filled[i];
-    if(show){if(id&&id!==it.answer[i]){g.fillStyle=C.bad;g.globalAlpha=.12;g.fillRect(X(s.t0)+1,Tp,X(s.t1)-X(s.t0)-2,ph);g.globalAlpha=1;drawShape(id,C.bad,[5,5])}drawShape(it.answer[i],COL(it.tgt))}
-    else if(id)drawShape(id,COL(it.tgt));
-  });
-  $('slotInfo').textContent=show?'':`Interval ${Math.min(it.filled.length+1,it.m.segs.length)} of ${it.m.segs.length}`;
+  // Background
+  g.fillStyle=C.surface;g.fillRect(0,0,w,h);
+
+  // Grid
+  g.strokeStyle=C.grid;g.lineWidth=1;g.beginPath();
+  for(let t=0;t<=T;t++){const x=Math.round(X(t))+.5;g.moveTo(x,Tp);g.lineTo(x,Tp+ph)}
+  for(const v of [-M,-M/2,M/2,M]){const y=Math.round(Y(v))+.5;g.moveTo(L,y);g.lineTo(L+pw,y)}
+  g.stroke();
+
+  // Segment boundary vertical dashed lines
+  g.save();g.setLineDash([4,4]);g.strokeStyle=C.segline;g.lineWidth=1.5;g.beginPath();
+  it.bounds.forEach(b=>{const x=Math.round(X(b))+.5;g.moveTo(x,Tp);g.lineTo(x,Tp+ph)});
+  g.stroke();g.restore();
+
+  // Axes
+  g.strokeStyle=C.axis;g.lineWidth=1.4;g.beginPath();
+  g.moveTo(L,Math.round(mid)+.5);g.lineTo(L+pw,Math.round(mid)+.5);
+  g.moveTo(L+.5,Tp);g.lineTo(L+.5,Tp+ph);
+  g.stroke();
+
+  // Labels: Y axis
+  g.fillStyle=C.muted;g.font='10px system-ui,-apple-system,Segoe UI,sans-serif';g.textAlign='right';g.textBaseline='middle';
+  for(const v of [-M,-M/2,0,M/2,M])g.fillText(fmt(v),L-5,Y(v));
+
+  // Labels: X axis
+  g.textAlign='center';g.textBaseline='top';
+  for(let t=0;t<=T;t+=(w<380?2:1))g.fillText(t===T?'8 s':String(t),Math.min(X(t),L+pw-6),Tp+ph+5);
+
+  // Target Title
+  g.fillStyle=COL(q);g.font='bold 11px system-ui,-apple-system,sans-serif';g.textAlign='left';g.textBaseline='top';
+  g.fillText(`${LBL[q]} (${UNIT[q]})`,L+5,Tp+2);
+
+  const hasError = it.filled.some((f,i)=>f!==it.answer[i]);
+  const isComplete = it.filled.length >= it.m.segs.length;
+  const view = S.buildView || 'both';
+
+  // Slot Info and UI setup
+  if(!show){
+    if($('buildReviewHeader')) $('buildReviewHeader').hidden=true;
+    if($('buildBreakdown')) $('buildBreakdown').hidden=true;
+    if($('tiles')) $('tiles').hidden=false;
+    if($('buildActionRow')) $('buildActionRow').hidden=false;
+    const curIdx = it.filled.length;
+    if(curIdx < it.m.segs.length){
+      const cs = it.m.segs[curIdx];
+      g.fillStyle = 'rgba(214, 123, 25, 0.14)';
+      g.fillRect(X(cs.t0)+1, Tp, X(cs.t1)-X(cs.t0)-2, ph);
+      $('slotInfo').innerHTML = `Building <strong>Interval ${curIdx+1} of ${it.m.segs.length}</strong> (${cs.t0}&ndash;${cs.t1} s): choose shape below`;
+    }
+  } else {
+    // Review mode
+    if(hasError){
+      if($('buildReviewHeader')) {
+        $('buildReviewHeader').hidden=false;
+        if($('legSolidLine')) $('legSolidLine').style.background = COL(q);
+      }
+      if($('tiles')) $('tiles').hidden=true;
+      if($('buildActionRow')) $('buildActionRow').hidden=true;
+      if($('buildBreakdown')) {
+        $('buildBreakdown').hidden=false;
+        $('buildBreakdown').innerHTML = it.m.segs.map((s,i)=>{
+          const ok = it.filled[i] === it.answer[i];
+          const uName = tileName(q, it.filled[i]);
+          const aName = tileName(q, it.answer[i]);
+          return `<div class="breakdown-card ${ok?'good':'bad'}">
+            <div class="breakdown-header">
+              <span class="breakdown-title">Interval ${i+1} (${s.t0}&ndash;${s.t1} s)</span>
+              <span class="breakdown-status ${ok?'good':'bad'}">${ok?'✓ Correct':'✕ Misjudged'}</span>
+            </div>
+            <div class="breakdown-details">
+              ${ok?`<div>Shape: <strong style="color:var(--good);">${aName}</strong></div>`
+                 :`<div>Your pick: <span class="user-pick">${uName}</span></div><div>Correct: <span class="correct-pick">${aName}</span></div>`}
+            </div>
+          </div>`;
+        }).join('');
+      }
+    } else {
+      if($('buildReviewHeader')) $('buildReviewHeader').hidden=true;
+      if($('buildBreakdown')) $('buildBreakdown').hidden=true;
+      $('slotInfo').innerHTML = `<strong style="color:var(--good);font-size:13px;">✓ All Segments Correct!</strong>`;
+    }
+  }
+
+  // Column annotations on canvas when in review with error
+  if(show && hasError){
+    it.m.segs.forEach((s,i)=>{
+      const ok = it.filled[i] === it.answer[i];
+      g.fillStyle = ok ? 'rgba(21, 128, 61, 0.06)' : 'rgba(185, 28, 28, 0.10)';
+      g.fillRect(X(s.t0)+1, Tp, X(s.t1)-X(s.t0)-2, ph);
+
+      // On-canvas Column Watermark Badge
+      const xMid = (X(s.t0) + X(s.t1)) / 2;
+      g.save();
+      g.font = 'bold 10px system-ui,-apple-system,sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'top';
+      if(!ok){
+        g.fillStyle = '#b91c1c';
+        g.fillText(`✕ Pick: ${tileName(q, it.filled[i])}`, xMid, Tp + 14);
+      } else {
+        g.fillStyle = '#15803d';
+        g.fillText('✓ Correct', xMid, Tp + 14);
+      }
+      g.restore();
+    });
+  }
+
+  // Compute User Trajectory Points (100% continuous endpoint chaining)
+  const userSegments = [];
+  let curVal = stateAt(it.m, 0)[q]; // initial condition anchor
+  for(let i=0; i<it.filled.length; i++){
+    const s = it.m.segs[i];
+    const pickId = it.filled[i];
+    const isCorrect = pickId === it.answer[i];
+    const dt = s.t1 - s.t0;
+    const segPts = [];
+    const N_SUB = 25;
+    const startVal = curVal;
+
+    if(q === 'a'){
+      const level = pickId === 'ap' ? (isCorrect ? s.a : 1.5) : (pickId === 'an' ? (isCorrect ? s.a : -1.5) : 0);
+      segPts.push({t: s.t0, val: level});
+      segPts.push({t: s.t1, val: level});
+      curVal = level;
+    } else if(isCorrect){
+      for(let k=0; k<=N_SUB; k++){
+        const u = k / N_SUB;
+        const t = s.t0 + u * dt;
+        const dVal = stateAt(it.m, t)[q] - stateAt(it.m, s.t0)[q];
+        segPts.push({t, val: startVal + dVal});
+      }
+      curVal = segPts[segPts.length-1].val;
+    } else {
+      for(let k=0; k<=N_SUB; k++){
+        const u = k / N_SUB;
+        const t = s.t0 + u * dt;
+        let val = startVal;
+        if(q === 'v'){
+          const nomSlope = 1.3;
+          let dv = 0;
+          if(['var','vbr','vcu'].includes(pickId)) dv = nomSlope * dt * u;
+          else if(['vaf','vbf','vcd'].includes(pickId)) dv = -nomSlope * dt * u;
+          val = startVal + dv;
+        } else if(q === 'x'){
+          const nomD = Math.max(2.4, M * 0.42) * (dt / 4);
+          let defl = 0;
+          if(pickId === 'xr') defl = nomD * u;
+          else if(pickId === 'xf') defl = -nomD * u;
+          else if(pickId === 'xru') defl = nomD * u * u;
+          else if(pickId === 'xrd') defl = nomD * (1 - (1-u)**2);
+          else if(pickId === 'xfu') defl = -nomD * (1 - (1-u)**2);
+          else if(pickId === 'xfd') defl = -nomD * u * u;
+          else if(pickId === 'xp') defl = nomD * (4 * u * (1-u));
+          else if(pickId === 'xv') defl = -nomD * (4 * u * (1-u));
+          val = startVal + defl;
+        }
+        val = Math.max(-M * 1.15, Math.min(M * 1.15, val));
+        segPts.push({t, val});
+      }
+      curVal = segPts[segPts.length-1].val;
+    }
+    userSegments.push({i, isCorrect, pts: segPts, startVal});
+  }
+
+  // Draw Curves:
+  g.save();
+  g.beginPath();
+  g.rect(L, Tp-2, pw, ph+4);
+  g.clip();
+
+  // Helper to draw true physical solution
+  const drawCorrectCurve = () => {
+    g.save();
+    g.strokeStyle = COL(q);
+    g.lineWidth = 3.2;
+    g.setLineDash([]);
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.beginPath();
+    if(q === 'a'){
+      it.m.segs.forEach((s, idx)=>{
+        const xA = X(s.t0), xB = X(s.t1), y = Y(s.a);
+        if(idx === 0) g.moveTo(xA, y);
+        else g.lineTo(xA, y); // vertical step transition
+        g.lineTo(xB, y);
+      });
+      g.stroke();
+    } else {
+      for(let k=0; k<=160; k++){
+        const t = k * T / 160;
+        const v = stateAt(it.m, t)[q];
+        const x = X(t), y = Y(v);
+        k === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+      }
+      g.stroke();
+    }
+    // Draw apexes if x-t
+    if(q === 'x'){
+      const apexes = findExtrema(trueF, 'x');
+      apexes.forEach(pt=>{
+        const px = Math.round(X(pt.t)) + 0.5, py = Math.round(Y(pt.x)) + 0.5;
+        g.fillStyle = 'rgba(214, 123, 25, 0.22)';
+        g.beginPath(); g.arc(px, py, 6.5, 0, 2*Math.PI); g.fill();
+        g.strokeStyle = '#d67b19'; g.lineWidth = 2.2;
+        g.beginPath(); g.arc(px, py, 4.5, 0, 2*Math.PI); g.stroke();
+        g.fillStyle = '#ffffff';
+        g.beginPath(); g.arc(px, py, 2.5, 0, 2*Math.PI); g.fill();
+      });
+    }
+    g.restore();
+  };
+
+  // Helper to draw user's curve
+  const drawUserCurve = (dashedRed = false) => {
+    if(!userSegments.length) return;
+    g.save();
+    userSegments.forEach((seg, sIdx)=>{
+      g.lineWidth = 3;
+      g.lineCap = 'round';
+      g.lineJoin = 'round';
+      if(dashedRed){
+        g.strokeStyle = '#ef4444';
+        g.setLineDash([6, 4]);
+      } else {
+        g.strokeStyle = seg.isCorrect ? COL(q) : '#ef4444';
+        g.setLineDash(seg.isCorrect ? [] : [6, 4]);
+      }
+      g.beginPath();
+      seg.pts.forEach((p, idx)=>{
+        const x = X(p.t), y = Y(p.val);
+        if(idx === 0){
+          if(sIdx > 0 && q === 'a') g.lineTo(x, y);
+          else g.moveTo(x, y);
+        } else {
+          g.lineTo(x, y);
+        }
+      });
+      g.stroke();
+    });
+    g.restore();
+  };
+
+  if(!show){
+    // In active building: draw user curve in solid/correct style
+    drawUserCurve(false);
+    // Draw endpoint junction nodes
+    userSegments.forEach(seg=>{
+      const lastP = seg.pts[seg.pts.length-1];
+      const px = Math.round(X(lastP.t)) + 0.5, py = Math.round(Y(lastP.val)) + 0.5;
+      g.fillStyle = '#ffffff'; g.strokeStyle = COL(q); g.lineWidth = 2.5;
+      g.beginPath(); g.arc(px, py, 3.5, 0, 2*Math.PI); g.fill(); g.stroke();
+    });
+    // Draw current pen cursor
+    if(userSegments.length > 0 && it.filled.length < it.m.segs.length){
+      const lastSeg = userSegments[userSegments.length-1];
+      const lastP = lastSeg.pts[lastSeg.pts.length-1];
+      const px = Math.round(X(lastP.t)) + 0.5, py = Math.round(Y(lastP.val)) + 0.5;
+      g.fillStyle = '#d67b19';
+      g.beginPath(); g.arc(px, py, 4.5, 0, 2*Math.PI); g.fill();
+    }
+  } else {
+    // Review mode
+    if(!hasError){
+      // All correct: show full continuous physical curve
+      drawCorrectCurve();
+      it.bounds.forEach(b=>{
+        const v = stateAt(it.m, b)[q];
+        const px = Math.round(X(b)) + 0.5, py = Math.round(Y(v)) + 0.5;
+        g.fillStyle = '#ffffff'; g.strokeStyle = COL(q); g.lineWidth = 2.5;
+        g.beginPath(); g.arc(px, py, 3.5, 0, 2*Math.PI); g.fill(); g.stroke();
+      });
+    } else {
+      // Has error: render based on view toggle
+      if(view === 'both'){
+        drawUserCurve(true); // user curve in dashed red
+        drawCorrectCurve();  // true curve in solid brand color
+      } else if(view === 'user'){
+        drawUserCurve(false);
+      } else if(view === 'correct'){
+        drawCorrectCurve();
+      }
+      // Draw junction markers at boundaries
+      it.bounds.forEach(b=>{
+        const v = stateAt(it.m, b)[q];
+        const px = Math.round(X(b)) + 0.5, py = Math.round(Y(v)) + 0.5;
+        g.fillStyle = '#ffffff'; g.strokeStyle = COL(q); g.lineWidth = 2.2;
+        g.beginPath(); g.arc(px, py, 3.5, 0, 2*Math.PI); g.fill(); g.stroke();
+      });
+    }
+  }
+  g.restore();
 }
 
 function record(ok){
@@ -1112,7 +1448,7 @@ function answerMatch(i){
 function pressTile(id){
   const it=S.item;if(S.busy||!it||S.mode!=='build'||S.reviewing)return;
   it.filled.push(id);
-  if(it.filled.length<it.m.segs.length){drawTarget();return}
+  if(it.filled.length<it.m.segs.length){drawTarget(false);return}
   const ok=it.filled.every((f,i)=>f===it.answer[i]);
   record(ok);drawTarget(true);flash(ok);
 
@@ -1125,7 +1461,7 @@ function pressTile(id){
       setTimeout(()=>{if(!sprintOver())next()},1800);
     }else{
       // Practice Mode: Pause indefinitely for student review
-      showReviewBanner('The dashed red curve marks your selections; the solid curve shows the correct segment motion.');
+      showReviewBanner('Review the comparison above: the solid curve shows the correct physics, while the dashed red curve shows your attempt. Use the toggle buttons above the graph to inspect either curve.');
     }
   }
 }
@@ -1135,6 +1471,13 @@ function resetCurrent(){
   S.busy=false;
   S.srcHoverT = null;
   S.optHoverT = [null, null, null, null];
+  S.buildView = 'both';
+  if($('buildViewToggle')){
+    [...$('buildViewToggle').children].forEach((b,idx)=>{
+      b.classList.toggle('active', idx===0);
+      b.setAttribute('aria-pressed', idx===0?'true':'false');
+    });
+  }
   if(!S.item)return;
   if(S.mode==='match'){
     const bs=[...$('opts').children];
@@ -1145,6 +1488,10 @@ function resetCurrent(){
     renderOpts(true);
   }else{
     S.item.filled=[];
+    if($('buildReviewHeader')) $('buildReviewHeader').hidden=true;
+    if($('buildBreakdown')) $('buildBreakdown').hidden=true;
+    if($('tiles')) $('tiles').hidden=false;
+    if($('buildActionRow')) $('buildActionRow').hidden=false;
     drawTarget(false);
   }
   renderSrc();
@@ -1159,7 +1506,29 @@ function resetScore(){
 }
 
 $('tiles').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)pressTile(b.dataset.t)});
-$('undo').onclick=()=>{if(S.busy||!S.item||!S.item.filled||S.reviewing)return;S.item.filled.pop();drawTarget()};
+$('undo').onclick=()=>{
+  if(S.busy||!S.item||!S.item.filled||S.reviewing)return;
+  S.item.filled.pop();
+  if($('buildReviewHeader')) $('buildReviewHeader').hidden=true;
+  if($('buildBreakdown')) $('buildBreakdown').hidden=true;
+  if($('tiles')) $('tiles').hidden=false;
+  if($('buildActionRow')) $('buildActionRow').hidden=false;
+  drawTarget(false);
+};
+if($('buildViewToggle')){
+  $('buildViewToggle').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-view]');
+    if(!btn) return;
+    [...$('buildViewToggle').children].forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+    S.buildView = btn.dataset.view;
+    drawTarget(true);
+  });
+}
 $('btnNextGraph').onclick=()=>next();
 $('btnTryAgain').onclick=()=>resetCurrent();
 $('btnReset').onclick=()=>resetCurrent();
